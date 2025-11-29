@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Filters = ({ filters, onFilterChange, onClear }) => {
+const Filters = ({ filters, onFilterChange, onClear, onClose }) => {
   const ZONES = ['Norte', 'Sur', 'Este', 'Oeste', 'CentroNorte', 'CentroSur'];
   const AMENITIES = [
     'Recamara en Planta Baja',
@@ -149,9 +149,14 @@ const Filters = ({ filters, onFilterChange, onClear }) => {
         </div>
       </div>
 
-      <button className="btn btn-outline clear-btn" onClick={onClear}>
-        Limpiar Filtros
-      </button>
+      <div className="filter-actions" style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+        <button className="btn btn-outline clear-btn" onClick={onClear}>
+          Limpiar Filtros
+        </button>
+        <button className="btn btn-secondary" onClick={onClose}>
+          Cerrar
+        </button>
+      </div>
 
       <style>{`
         .filters-container {

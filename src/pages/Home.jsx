@@ -5,6 +5,7 @@ import Filters from '../components/Filters';
 import { useProperties } from '../hooks/useProperties';
 
 const Home = () => {
+  const [showFilters, setShowFilters] = React.useState(false);
   const { 
     properties, 
     loading, 
@@ -27,7 +28,23 @@ const Home = () => {
       <section className="section container">
         <h2 className="section-title">Propiedades Destacadas</h2>
         
-        <Filters filters={filters} onFilterChange={handleFilterChange} onClear={clearFilters} />
+        <div className="filters-header" style={{ marginBottom: 'var(--spacing-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+          </button>
+        </div>
+        
+        {showFilters && (
+          <Filters 
+            filters={filters} 
+            onFilterChange={handleFilterChange} 
+            onClear={clearFilters} 
+            onClose={() => setShowFilters(false)}
+          />
+        )}
         
         {loading && (
           <div className="loading-container">
