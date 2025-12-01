@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { getProperty } from '../services/api';
 
 import { mockProperties } from '../data/mockProperties';
@@ -7,6 +7,7 @@ import inventoryData from '../data/inventory.json';
 
 const PropertyDetails = () => {
   const { id } = useParams();
+  const locationRoute = useLocation();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -165,7 +166,15 @@ const PropertyDetails = () => {
                 <textarea placeholder="Mensaje" className="form-input" rows="4"></textarea>
                 <button className="btn btn-primary full-width">Enviar Mensaje</button>
               </form>
-            </div>
+              </div>
+              <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+                <Link 
+                  to={locationRoute.state?.backUrl || '/'} 
+                  className="btn btn-outline full-width"
+                >
+                  {locationRoute.state?.fromProposal ? 'Volver a mis opciones' : 'Regresar al Listado'}
+                </Link>
+              </div>
           </aside>
         </div>
       </div>
@@ -338,6 +347,20 @@ const PropertyDetails = () => {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .btn-outline {
+          background: transparent;
+          border: 1px solid var(--color-primary);
+          color: var(--color-primary);
+          padding: 0.8rem;
+          border-radius: 4px;
+          text-decoration: none;
+          display: inline-block;
+          transition: all 0.2s;
+        }
+        .btn-outline:hover {
+          background: var(--color-primary);
+          color: white;
         }
       `}</style>
     </div>

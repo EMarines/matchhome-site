@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link, useLocation } from 'react-router-dom';
 import PropertyCard from '../components/PropertyCard';
 import inventoryData from '../data/inventory.json';
 import { mockProperties } from '../data/mockProperties';
@@ -7,6 +7,7 @@ import { mockProperties } from '../data/mockProperties';
 const ProposalPage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [anchorProperty, setAnchorProperty] = useState(null);
   const [similarProperties, setSimilarProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,14 +134,13 @@ const ProposalPage = () => {
               </p>
 
               <div className="anchor-actions">
-                {/* Placeholder for future Chat/AI interaction */}
-                <div className="ai-placeholder">
-                  <div className="ai-icon">🤖</div>
-                  <div className="ai-text">
-                    <strong>Asistente Virtual (Próximamente)</strong>
-                    <p>Aquí podrás chatear y agendar tu visita directamente.</p>
-                  </div>
-                </div>
+                <Link 
+                  to={`/property/${anchorProperty.public_id}`} 
+                  state={{ backUrl: location.pathname + location.search, fromProposal: true }}
+                  className="btn btn-secondary full-width"
+                >
+                  Ver Detalles
+                </Link>
               </div>
             </div>
           </div>
@@ -157,7 +157,11 @@ const ProposalPage = () => {
 
             <div className="properties-grid">
               {similarProperties.map(property => (
-                <PropertyCard key={property.public_id} property={property} />
+                <PropertyCard 
+                  key={property.public_id} 
+                  property={property} 
+                  linkState={{ backUrl: location.pathname + location.search, fromProposal: true }}
+                />
               ))}
             </div>
           </section>
