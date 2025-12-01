@@ -1,0 +1,9 @@
+{
+	"/": [],
+	"/property/[id]": [
+		"src/routes/property/[id]/+page.js"
+	],
+	"/propuesta/[id]": [
+		"src/routes/propuesta/[id]/+page.js"
+	]
+}

@@ -1,7 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-// https://vite.dev/config/
 // Custom plugin to handle inventory updates
 const inventoryUpdaterPlugin = () => ({
   name: 'inventory-updater',
@@ -11,6 +10,7 @@ const inventoryUpdaterPlugin = () => ({
         console.log('🔄 Triggering inventory update...');
         const { spawn } = await import('child_process');
         
+        // Adjust path if necessary
         const child = spawn('node', ['scripts/download-inventory.js'], {
           stdio: 'inherit',
           shell: true
@@ -33,7 +33,7 @@ const inventoryUpdaterPlugin = () => ({
 });
 
 export default defineConfig({
-  plugins: [react(), inventoryUpdaterPlugin()],
+	plugins: [sveltekit(), inventoryUpdaterPlugin()],
   server: {
     proxy: {
       '/api': {
@@ -44,4 +44,4 @@ export default defineConfig({
       },
     },
   },
-})
+});
