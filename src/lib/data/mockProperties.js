@@ -70,5 +70,23 @@ export const mockProperties = [
     bathrooms: 6,
     construction_size: 600,
     lot_size: 1200
+  },
+  {
+    public_id: "EB-OK9827",
+    title: "Casa de Prueba (Simulada)",
+    title_image_thumb: "https://images.unsplash.com/photo-1600596542815-e328700281fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    title_image_full: "https://images.unsplash.com/photo-1600596542815-e328700281fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+    location: { name: "Zona Norte, Chihuahua" },
+    operations: [{ type: "Venta", amount: 4500000, currency: "MXN" }],
+    bedrooms: 3,
+    bathrooms: 3.5,
+    construction_size: 280,
+    lot_size: 300,
+    property_images: [
+        { url: "https://images.unsplash.com/photo-1600596542815-e328700281fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80", title: "Fachada" },
+        { url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80", title: "Sala" },
+        { url: "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80", title: "Comedor" }
+    ],
+    description: "Esta es una propiedad simulada para probar el enlace de propuesta EB-OK9827. Cuenta con amplios espacios y acabados modernos."
   }
 ];
