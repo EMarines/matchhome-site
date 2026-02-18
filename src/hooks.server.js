@@ -19,8 +19,9 @@ export async function handle({ event, resolve }) {
     event.locals.db = await getFirebaseInstance(tenant);
   } catch (error) {
     console.error('Error connecting to Firebase:', error);
-    // Decidir si fallar o continuar sin DB (depende de la app)
-    // Por ahora continuamos, pero logueamos el error
+    // En build time (o si faltan credenciales), db será null.
+    // La aplicación debe manejar gracefully cuando event.locals.db no existe.
+    event.locals.db = null;
   }
 
   // 4. Pasar variables de tema al cliente (opcional, también se puede hacer en layout.server.js)
