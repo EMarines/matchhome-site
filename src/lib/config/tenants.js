@@ -6,7 +6,8 @@ export const tenants = {
     // Para desarrollo, usaremos un proyecto de Firebase de prueba o emuladores
     firebaseConfig: {
       projectId: 'jgcapitaldb', // ID real de tu proyecto
-      serviceAccountPath: './secrets/firebase-admin-dev.json' // Ruta relativa desde la raíz
+      // serviceAccountPath solo se usará si NODE_ENV es development
+      serviceAccountPath: './secrets/firebase-admin-dev.json' 
     },
     easyBrokerKey: 'pqnjps13ry7iaudododsi455mg22mt', // Demo Key
     theme: {

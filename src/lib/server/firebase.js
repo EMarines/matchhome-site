@@ -23,14 +23,26 @@ export async function getFirebaseInstance(tenantConfig) {
     // Cargar credenciales
     let credential;
     
-    if (tenantConfig.firebaseConfig.serviceAccountPath) {
+    if (process.env.NODE_ENV === 'development' && tenantConfig.firebaseConfig.serviceAccountPath) {
       // Desarrollo: Cargar desde archivo local
       const serviceAccountPath = resolve(process.cwd(), tenantConfig.firebaseConfig.serviceAccountPath);
       const serviceAccount = JSON.parse(await readFile(serviceAccountPath, 'utf-8'));
       credential = admin.credential.cert(serviceAccount);
     } else {
-      // Producción: Usar Application Default Credentials o variables de entorno
-      credential = admin.credential.applicationDefault();
+      // Producción: Usar Application Default Credentials (si está configurado en Vercel)
+      // O intentar cargar desde variable de entorno si existe
+      if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+         credential = admin.credential.applicationDefault();
+      } else {
+         console.warn(`No credentials found for ${tenantId}. Firebase Admin might not work.`);
+         // Return a placeholder or null if strict mode not required, or let it fail later
+         // For build purposes, we might want to skip initialization if no creds
+         if (process.env.npm_lifecycle_event === 'build') {
+             console.log('Skipping Firebase init during build');
+             return null; 
+         }
+         credential = admin.credential.applicationDefault();
+      }
     }
     
     const app = admin.initializeApp({
