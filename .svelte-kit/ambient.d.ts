@@ -28,7 +28,6 @@
 declare module '$env/static/private' {
 	export const ACLOCAL_PATH: string;
 	export const ALLUSERSPROFILE: string;
-	export const ANTIGRAVITY_AGENT: string;
 	export const ANTIGRAVITY_CLI_ALIAS: string;
 	export const APPDATA: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
@@ -85,15 +84,12 @@ declare module '$env/static/private' {
 	export const NUMBER_OF_PROCESSORS: string;
 	export const NVM_HOME: string;
 	export const NVM_SYMLINK: string;
-	export const OLDPWD: string;
 	export const OneDrive: string;
 	export const OneDriveConsumer: string;
 	export const ORIGINAL_PATH: string;
 	export const ORIGINAL_TEMP: string;
 	export const ORIGINAL_TMP: string;
-	export const ORIGINAL_XDG_CURRENT_DESKTOP: string;
 	export const OS: string;
-	export const PAGER: string;
 	export const PATH: string;
 	export const PATHEXT: string;
 	export const PKG_CONFIG_PATH: string;
@@ -165,7 +161,6 @@ declare module '$env/dynamic/private' {
 	export const env: {
 		ACLOCAL_PATH: string;
 		ALLUSERSPROFILE: string;
-		ANTIGRAVITY_AGENT: string;
 		ANTIGRAVITY_CLI_ALIAS: string;
 		APPDATA: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
@@ -222,15 +217,12 @@ declare module '$env/dynamic/private' {
 		NUMBER_OF_PROCESSORS: string;
 		NVM_HOME: string;
 		NVM_SYMLINK: string;
-		OLDPWD: string;
 		OneDrive: string;
 		OneDriveConsumer: string;
 		ORIGINAL_PATH: string;
 		ORIGINAL_TEMP: string;
 		ORIGINAL_TMP: string;
-		ORIGINAL_XDG_CURRENT_DESKTOP: string;
 		OS: string;
-		PAGER: string;
 		PATH: string;
 		PATHEXT: string;
 		PKG_CONFIG_PATH: string;

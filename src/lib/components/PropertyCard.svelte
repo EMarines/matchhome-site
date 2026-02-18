@@ -1,5 +1,7 @@
 <script>
 	export let property;
+	export let backUrl = null;
+	export let fromProposal = false;
 
 	// Map EasyBroker fields to our UI
 	$: image =
@@ -49,6 +51,7 @@
 	<div class="card-image-wrapper">
 		<img src={image} alt={title} class="card-image" />
 		<span class="card-status">{status}</span>
+		<span class="card-id">{id}</span>
 		<span class="card-price">{price}</span>
 	</div>
 	<div class="card-content">
@@ -66,7 +69,12 @@
 				{/each}
 			</div>
 		{/if}
-		<a href={`/property/${id}`} class="btn btn-secondary card-btn">Ver Detalles</a>
+		<a 
+			href={`/property/${id}${backUrl ? `?backUrl=${encodeURIComponent(backUrl)}&fromProposal=${fromProposal}` : ''}`} 
+			class="btn btn-secondary card-btn"
+		>
+			Ver Detalles
+		</a>
 	</div>
 </div>
 
@@ -105,11 +113,23 @@
 		font-size: var(--font-size-sm);
 		font-weight: 600;
 	}
+	.card-id {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		background: rgba(0, 0, 0, 0.3);
+		color: #fff;
+		padding: 2px 8px;
+		border-radius: 4px;
+		font-size: 13px;
+		font-weight: medium;
+		z-index: 2;
+	}
 	.card-price {
 		position: absolute;
 		bottom: 10px;
 		right: 10px;
-		background: rgba(0, 0, 0, 0.8);
+		background: rgba(0, 0, 0, 0.5);
 		color: var(--color-white);
 		padding: 6px 12px;
 		border-radius: 4px;

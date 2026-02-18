@@ -36,12 +36,12 @@ export default defineConfig({
 	plugins: [sveltekit(), inventoryUpdaterPlugin()],
   server: {
     proxy: {
-      '/api': {
-        target: 'https://api.easybroker.com/v1',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
+      // '/api': {
+      //   target: 'https://api.easybroker.com/v1',
+      //   changeOrigin: true,
+      //   secure: true,
+      //   rewrite: (path) => path.replace(/^\/api/, ''),
+      // },
     },
   },
 });

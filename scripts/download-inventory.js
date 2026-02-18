@@ -74,12 +74,25 @@ async function fetchAllProperties() {
     console.log('\n✨ Descarga completada.');
 
     // 3. Save to file
-    const outputPath = path.join(__dirname, '../src/data/inventory.json');
+    const outputPath = path.join(__dirname, '../src/lib/data/inventory.json');
+    
+    // Ensure directory exists
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      console.log(`📁 Creando directorio: ${outputDir}`);
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
     fs.writeFileSync(outputPath, JSON.stringify(detailedProperties, null, 2));
     console.log(`💾 Inventario guardado en: ${outputPath}`);
 
   } catch (error) {
-    console.error('❌ Error fatal:', error);
+    console.error('\n❌ ERROR FATAL DE COMUNICACIÓN O DESCARGA:');
+    console.error('----------------------------------------');
+    console.error(error.message || error);
+    console.error('----------------------------------------');
+    console.error('Por favor verifica tu conexión a internet y tu API Key.');
+    process.exit(1);
   }
 }
 

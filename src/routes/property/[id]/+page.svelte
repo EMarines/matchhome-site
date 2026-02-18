@@ -12,6 +12,35 @@
 			? property.property_images[0].url
 			: null) ||
 		'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22600%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20800%20600%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A40pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22800%22%20height%3D%22600%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22270%22%20y%3D%22318%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
+
+	// Image Gallery Logic
+	$: galleryImages =
+		property.property_images && property.property_images.length > 0
+			? property.property_images.map((img) => img.url)
+			: [property.title_image_full || property.title_image_thumb || '/placeholder.jpg'];
+
+	let currentImageIndex = 0;
+
+	// Reset index when property changes
+	$: if (property) currentImageIndex = 0;
+
+	$: image = galleryImages[currentImageIndex];
+
+	function nextImage() {
+		if (galleryImages.length > 1) {
+			currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
+		}
+	}
+
+	function prevImage() {
+		if (galleryImages.length > 1) {
+			currentImageIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
+		}
+	}
+
+	function selectImage(index) {
+		currentImageIndex = index;
+	}
 	$: title = property.title || 'Propiedad sin título';
 	$: description = property.description || 'Sin descripción disponible.';
 	$: locationStr =
@@ -68,11 +97,25 @@
 		<div class="details-grid">
 			<div class="details-main">
 				<div class="image-gallery">
-					<img src={image} alt={title} class="main-image" />
+					<div class="main-image-container">
+						<img src={image} alt={title} class="main-image" />
+						{#if galleryImages.length > 1}
+							<button class="nav-btn prev-btn" on:click={prevImage}>&#10094;</button>
+							<button class="nav-btn next-btn" on:click={nextImage}>&#10095;</button>
+							<div class="image-indicator">
+								{currentImageIndex + 1} / {galleryImages.length}
+							</div>
+						{/if}
+					</div>
 					{#if property.property_images && property.property_images.length > 0}
 						<div class="gallery-grid">
-							{#each property.property_images.slice(0, 4) as img}
-								<img src={img.url} alt={img.title || title} class="gallery-image" />
+							{#each property.property_images.slice(0, 4) as img, i}
+								<img
+									src={img.url}
+									alt={img.title || title}
+									class="gallery-image {i === currentImageIndex ? 'active' : ''}"
+									on:click={() => selectImage(i)}
+								/>
 							{/each}
 						</div>
 					{/if}
@@ -176,13 +219,6 @@
 		.details-grid {
 			grid-template-columns: 1fr;
 		}
-	}
-	.main-image {
-		width: 100%;
-		height: 400px;
-		object-fit: cover;
-		border-radius: 8px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
 	.gallery-grid {
 		display: grid;
@@ -290,5 +326,65 @@
 	}
 	.full-width {
 		width: 100%;
+	}
+
+	/* Carousel Styles */
+	.main-image-container {
+		position: relative;
+		width: 100%;
+		height: 400px;
+	}
+
+	.main-image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		border-radius: 8px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	.nav-btn {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		background: rgba(0, 0, 0, 0.5);
+		color: white;
+		border: none;
+		padding: 10px 15px;
+		cursor: pointer;
+		font-size: 1.5rem;
+		border-radius: 50%;
+		transition: background 0.3s;
+		z-index: 10;
+		user-select: none;
+	}
+
+	.nav-btn:hover {
+		background: rgba(0, 0, 0, 0.8);
+	}
+
+	.prev-btn {
+		left: 10px;
+	}
+
+	.next-btn {
+		right: 10px;
+	}
+
+	.image-indicator {
+		position: absolute;
+		bottom: 20px;
+		right: 20px;
+		background: rgba(0, 0, 0, 0.6);
+		color: white;
+		padding: 4px 10px;
+		border-radius: 12px;
+		font-size: 0.9rem;
+		z-index: 10;
+	}
+
+	.gallery-image.active {
+		border: 2px solid var(--color-primary);
+		opacity: 1;
 	}
 </style>

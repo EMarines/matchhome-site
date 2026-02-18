@@ -2,10 +2,11 @@
 	import Hero from '$lib/components/Hero.svelte';
 	import PropertyCard from '$lib/components/PropertyCard.svelte';
 	import Filters from '$lib/components/Filters.svelte';
-	import inventoryData from '$lib/data/inventory.json';
 	import { filterProperties } from '$lib/utils/filterProperties';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+
+	export let data;
 
 	let showFilters = false;
 
@@ -23,8 +24,11 @@
 	};
 	let currentPage = parseInt($page.url.searchParams.get('page')) || 1;
 
+	// Usar propiedades del servidor (Firestore)
+	$: sourceProperties = data.properties || [];
+
 	// Reactividad
-	$: result = filterProperties(inventoryData, search, filters, currentPage);
+	$: result = filterProperties(sourceProperties, search, filters, currentPage);
 	$: properties = result.items;
 	$: pagination = result.pagination;
 

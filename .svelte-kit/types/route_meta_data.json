@@ -1,9 +1,25 @@
 {
-	"/": [],
+	"/": [
+		"src/routes/+page.server.js",
+		"src/routes/+layout.server.js",
+		"src/routes/+layout.server.js"
+	],
+	"/api/debug-property": [
+		"src/routes/api/debug-property/+server.js"
+	],
+	"/api/sync": [
+		"src/routes/api/sync/+server.js"
+	],
 	"/property/[id]": [
-		"src/routes/property/[id]/+page.js"
+		"src/routes/property/[id]/+page.server.js",
+		"src/routes/+layout.server.js"
+	],
+	"/propiedades": [
+		"src/routes/propiedades/+page.server.js",
+		"src/routes/+layout.server.js"
 	],
 	"/propuesta/[id]": [
-		"src/routes/propuesta/[id]/+page.js"
+		"src/routes/propuesta/[id]/+page.js",
+		"src/routes/+layout.server.js"
 	]
 }

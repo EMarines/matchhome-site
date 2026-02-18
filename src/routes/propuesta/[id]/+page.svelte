@@ -90,7 +90,7 @@
 
 				<div class="properties-grid">
 					{#each similarProperties as property (property.public_id)}
-						<PropertyCard {property} />
+						<PropertyCard {property} backUrl={locationPath} fromProposal={true} />
 						<!-- Note: PropertyCard needs to handle backUrl/fromProposal if we want to pass it through. 
                  Currently PropertyCard links to /property/[id] directly. 
                  To support backUrl, we might need to update PropertyCard or just accept standard navigation.

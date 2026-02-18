@@ -27,20 +27,24 @@ export {};
 
 declare module "$app/types" {
 	export interface AppTypes {
-		RouteId(): "/" | "/property" | "/property/[id]" | "/propuesta" | "/propuesta/[id]";
+		RouteId(): "/" | "/api" | "/api/debug-property" | "/api/sync" | "/property" | "/property/[id]" | "/propiedades" | "/propuesta" | "/propuesta/[id]";
 		RouteParams(): {
 			"/property/[id]": { id: string };
 			"/propuesta/[id]": { id: string }
 		};
 		LayoutParams(): {
 			"/": { id?: string };
+			"/api": Record<string, never>;
+			"/api/debug-property": Record<string, never>;
+			"/api/sync": Record<string, never>;
 			"/property": { id?: string };
 			"/property/[id]": { id: string };
+			"/propiedades": Record<string, never>;
 			"/propuesta": { id?: string };
 			"/propuesta/[id]": { id: string }
 		};
-		Pathname(): "/" | "/property" | "/property/" | `/property/${string}` & {} | `/property/${string}/` & {} | "/propuesta" | "/propuesta/" | `/propuesta/${string}` & {} | `/propuesta/${string}/` & {};
+		Pathname(): "/" | "/api" | "/api/" | "/api/debug-property" | "/api/debug-property/" | "/api/sync" | "/api/sync/" | "/property" | "/property/" | `/property/${string}` & {} | `/property/${string}/` & {} | "/propiedades" | "/propiedades/" | "/propuesta" | "/propuesta/" | `/propuesta/${string}` & {} | `/propuesta/${string}/` & {};
 		ResolvedPathname(): `${"" | `/${string}`}${ReturnType<AppTypes['Pathname']>}`;
-		Asset(): string & {};
+		Asset(): "/logo.png" | "/vite.svg" | string & {};
 	}
 }

@@ -2,20 +2,29 @@
 	let updating = false;
 
 	async function handleUpdate() {
-		if (!confirm('¿Estás seguro de actualizar el inventario? Esto tomará unos minutos.')) return;
+		if (
+			!confirm(
+				'¿Estás seguro de actualizar el inventario? Esto tomará unos minutos y consumirá cuota de la API.'
+			)
+		)
+			return;
 
 		updating = true;
 		try {
-			const res = await fetch('/update-inventory', { method: 'POST' });
-			if (res.ok) {
-				alert('¡Inventario actualizado con éxito! La página se recargará.');
+			const res = await fetch('/api/sync', { method: 'POST' });
+			const data = await res.json();
+
+			if (res.ok && data.success) {
+				alert(
+					`¡Inventario actualizado con éxito! Se sincronizaron ${data.count} propiedades. La página se recargará.`
+				);
 				window.location.reload();
 			} else {
-				alert('Error al actualizar el inventario.');
+				alert(`Error al actualizar el inventario: ${data.error || 'Error desconocido'}`);
 			}
 		} catch (e) {
 			console.error(e);
-			alert('Error de conexión.');
+			alert('Error de conexión al intentar sincronizar.');
 		} finally {
 			updating = false;
 		}

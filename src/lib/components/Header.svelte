@@ -1,4 +1,5 @@
 <script>
+	import { page } from '$app/stores';
 	let isMenuOpen = false;
 
 	function toggleMenu() {
@@ -13,7 +14,13 @@
 <header class="header">
 	<div class="container header-container">
 		<div class="logo">
-			<h1>MatchHome</h1>
+			<a href="/">
+				{#if $page.data.tenant?.theme?.logo}
+					<img src={$page.data.tenant.theme.logo} alt={$page.data.tenant.name} class="logo-img" />
+				{:else}
+					<h1>{$page.data.tenant?.name || 'MatchHome'}</h1>
+				{/if}
+			</a>
 		</div>
 
 		<button class="hamburger-btn" on:click={toggleMenu} aria-label="Toggle menu">
@@ -62,6 +69,12 @@
 		font-size: 1.75rem;
 		font-weight: 800;
 		letter-spacing: -0.5px;
+	}
+	.logo-img {
+		height: 40px;
+		width: auto;
+		max-width: 200px;
+		object-fit: contain;
 	}
 	.nav-list {
 		display: flex;
