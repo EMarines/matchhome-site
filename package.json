@@ -17,5 +17,8 @@
    "type": "module",
    "dependencies": {
       "firebase-admin": "^13.6.0"
+   },
+   "engines": {
+      "node": "18.x"
    }
 }
