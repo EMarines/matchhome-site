@@ -90,3 +90,4 @@ export const mockProperties = [
     description: "Esta es una propiedad simulada para probar el enlace de propuesta EB-OK9827. Cuenta con amplios espacios y acabados modernos."
   }
 ];
+// Trigger Vercel Redeploy
