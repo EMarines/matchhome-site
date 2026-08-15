@@ -1,7 +1,21 @@
+<script>
+	import { page } from '$app/stores';
+</script>
+
 <footer class="footer">
 	<div class="container footer-container">
 		<div class="footer-column">
-			<h3 class="footer-logo">MatchHome</h3>
+			<a href="/" class="footer-logo-link">
+				{#if $page.data.tenant?.theme?.logo}
+					<img
+						src={$page.data.tenant.theme.logo}
+						alt={$page.data.tenant.name}
+						class="footer-logo-img"
+					/>
+				{:else}
+					<h3 class="footer-logo">{$page.data.tenant?.name || 'MatchHome'}</h3>
+				{/if}
+			</a>
 			<p class="footer-desc">
 				Tu aliado confiable para encontrar la propiedad de tus sueños. Experiencia, seguridad y
 				confianza.
@@ -19,14 +33,14 @@
 		<div class="footer-column">
 			<h4 class="footer-title">Contacto</h4>
 			<ul class="footer-contact">
-				<li>📍 Av. Principal 123, Ciudad</li>
-				<li>📞 +52 55 1234 5678</li>
-				<li>✉️ contacto@matchhome.com</li>
+				<li>📍 Av. Francisco Villa # 5700, Col. Panamericana</li>
+				<li>📞 <a href="tel:6145404003">614 540 4003</a></li>
+				<li>✉️ <a href="mailto:contacto@matchhome.com">contacto@matchhome.com</a></li>
 			</ul>
 		</div>
 	</div>
 	<div class="footer-bottom">
-		<p>&copy; 2024 MatchHome. Todos los derechos reservados.</p>
+		<p>&copy; {new Date().getFullYear()} {$page.data.tenant?.name || 'MatchHome'}. Todos los derechos reservados.</p>
 	</div>
 </footer>
 
@@ -42,14 +56,25 @@
 		gap: var(--spacing-xl);
 		padding-bottom: var(--spacing-2xl);
 	}
+	.footer-logo-link {
+		display: inline-block;
+		margin-bottom: var(--spacing-md);
+	}
 	.footer-logo {
 		font-size: var(--font-size-2xl);
 		color: var(--color-white);
-		margin-bottom: var(--spacing-md);
+		font-weight: 800;
+	}
+	.footer-logo-img {
+		height: 45px;
+		width: auto;
+		max-width: 200px;
+		object-fit: contain;
 	}
 	.footer-desc {
 		color: #ccc;
 		line-height: 1.6;
+		font-size: 0.95rem;
 	}
 	.footer-title {
 		font-size: var(--font-size-lg);
@@ -59,12 +84,17 @@
 	.footer-links li,
 	.footer-contact li {
 		margin-bottom: var(--spacing-sm);
+		color: #ccc;
+		font-size: 0.95rem;
+		line-height: 1.5;
 	}
-	.footer-links a {
+	.footer-links a,
+	.footer-contact a {
 		color: #ccc;
 		transition: color 0.2s;
 	}
-	.footer-links a:hover {
+	.footer-links a:hover,
+	.footer-contact a:hover {
 		color: var(--color-secondary);
 	}
 	.footer-bottom {
@@ -79,7 +109,10 @@
 		.footer-container {
 			grid-template-columns: 1fr;
 			text-align: center;
-			gap: var(--spacing-lg);
+			gap: var(--spacing-xl);
+		}
+		.footer-logo-img {
+			margin: 0 auto;
 		}
 	}
 </style>
