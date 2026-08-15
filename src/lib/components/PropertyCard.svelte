@@ -110,7 +110,7 @@
 	}
 	.card-image-wrapper {
 		position: relative;
-		height: 250px;
+		height: 240px;
 	}
 	.card-image {
 		width: 100%;
@@ -123,46 +123,61 @@
 		left: 10px;
 		background: var(--color-primary);
 		color: var(--color-white);
-		padding: 4px 12px;
+		padding: 4px 10px;
 		border-radius: 4px;
 		font-size: var(--font-size-sm);
 		font-weight: 600;
+		z-index: 2;
 	}
 	.card-id {
 		position: absolute;
 		top: 10px;
 		right: 10px;
-		background: rgba(0, 0, 0, 0.3);
+		background: rgba(0, 0, 0, 0.45);
 		color: #fff;
-		padding: 2px 8px;
+		padding: 3px 8px;
 		border-radius: 4px;
-		font-size: 13px;
-		font-weight: medium;
+		font-size: 12px;
+		font-weight: 500;
 		z-index: 2;
 	}
 	.card-price {
 		position: absolute;
 		bottom: 10px;
 		right: 10px;
-		background: rgba(0, 0, 0, 0.5);
+		background: rgba(0, 0, 0, 0.7);
 		color: var(--color-white);
-		padding: 6px 12px;
+		padding: 5px 10px;
 		border-radius: 4px;
 		font-weight: 700;
-		font-size: var(--font-size-lg);
+		font-size: var(--font-size-base);
+		z-index: 2;
+		max-width: calc(100% - 20px);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.card-content {
 		padding: var(--spacing-md);
 	}
 	.card-title {
-		font-size: var(--font-size-lg);
+		font-size: 1.1rem;
 		margin-bottom: var(--spacing-xs);
 		color: var(--color-text-main);
+		line-height: 1.35;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		min-height: 2.7rem;
 	}
 	.card-location {
 		color: var(--color-text-light);
 		font-size: var(--font-size-sm);
 		margin-bottom: var(--spacing-md);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.card-features {
 		display: flex;
@@ -172,6 +187,10 @@
 		margin-bottom: var(--spacing-md);
 		color: var(--color-text-light);
 		font-size: var(--font-size-sm);
+		gap: 0.25rem;
+	}
+	.feature {
+		white-space: nowrap;
 	}
 	.card-btn {
 		width: 100%;
@@ -189,5 +208,18 @@
 		font-size: 10px;
 		padding: 2px 6px;
 		border-radius: 4px;
+	}
+
+	@media (max-width: 480px) {
+		.card-image-wrapper {
+			height: 210px;
+		}
+		.card-price {
+			font-size: 0.95rem;
+			padding: 4px 8px;
+		}
+		.card-features {
+			font-size: 0.8rem;
+		}
 	}
 </style>

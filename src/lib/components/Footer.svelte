@@ -1,7 +1,3 @@
-<script>
-	import UpdateInventoryButton from './UpdateInventoryButton.svelte';
-</script>
-
 <footer class="footer">
 	<div class="container footer-container">
 		<div class="footer-column">
@@ -31,9 +27,6 @@
 	</div>
 	<div class="footer-bottom">
 		<p>&copy; 2024 MatchHome. Todos los derechos reservados.</p>
-		<div style="margin-top: 10px;">
-			<UpdateInventoryButton />
-		</div>
 	</div>
 </footer>
 

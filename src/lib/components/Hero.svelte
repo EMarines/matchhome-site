@@ -96,20 +96,40 @@
 
 	@media (max-width: 768px) {
 		.hero {
-			height: 500px;
+			height: auto;
+			min-height: 420px;
+			padding: 3.5rem 0;
 		}
 		.hero-title {
-			font-size: 2.5rem;
+			font-size: 2.1rem;
+			line-height: 1.25;
 		}
 		.hero-subtitle {
-			font-size: var(--font-size-lg);
+			font-size: 1rem;
+			margin-bottom: var(--spacing-xl);
 		}
 		.search-bar {
 			flex-direction: column;
-			padding: var(--spacing-md);
+			padding: 0.75rem;
+			gap: 0.75rem;
+		}
+		.search-input {
+			font-size: 16px; /* Previene auto-zoom en iOS Safari */
+			padding: 0.75rem;
+			border-radius: 6px;
+			border: 1px solid var(--color-border);
 		}
 		.search-btn {
 			width: 100%;
+			padding: 0.85rem;
+			font-size: 1rem;
+			font-weight: 700;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.hero-title {
+			font-size: 1.75rem;
 		}
 	}
 </style>

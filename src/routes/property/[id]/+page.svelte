@@ -4,27 +4,18 @@
 	export let data;
 	$: property = data.property;
 
-	// Helpers
-	$: image =
-		property.title_image_full ||
-		property.title_image_thumb ||
-		(property.property_images && property.property_images.length > 0
-			? property.property_images[0].url
-			: null) ||
-		'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22600%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20800%20600%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A40pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22800%22%20height%3D%22600%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22270%22%20y%3D%22318%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
-
 	// Image Gallery Logic
 	$: galleryImages =
 		property.images && property.images.length > 0
-			? property.images.map((img) => typeof img === 'string' ? img : img.url || img)
+			? property.images.map((img) => (typeof img === 'string' ? img : img.url || img))
 			: property.property_images && property.property_images.length > 0
 			? property.property_images.map((img) => img.url)
 			: [
 					property.imagenPrincipal ||
-					property.imagenMiniatura ||
-					property.title_image_full ||
-					property.title_image_thumb ||
-					'/placeholder.jpg'
+						property.imagenMiniatura ||
+						property.title_image_full ||
+						property.title_image_thumb ||
+						'/placeholder.jpg'
 			  ];
 
 	let currentImageIndex = 0;
@@ -60,7 +51,9 @@
 
 	$: price =
 		property.precioFormateado ||
-		(property.precio ? `$${Number(property.precio).toLocaleString('es-MX')} ${property.moneda || 'MXN'}` : null) ||
+		(property.precio
+			? `$${Number(property.precio).toLocaleString('es-MX')} ${property.moneda || 'MXN'}`
+			: null) ||
 		(property.operations && property.operations.length > 0
 			? property.operations[0].formatted_amount ||
 				property.operations[0].formated_amount ||
@@ -84,7 +77,8 @@
 
 	$: beds = property.recamaras || property.bedrooms || 0;
 	$: baths = property.banos || property.bathrooms || 0;
-	$: area = property.construccion || property.terreno || property.construction_size || property.lot_size || 0;
+	$: area =
+		property.construccion || property.terreno || property.construction_size || property.lot_size || 0;
 	$: features = property.amenidades || property.features || [];
 
 	// Navigation state fallback
@@ -128,11 +122,7 @@
 									class="gallery-thumb-btn {i === currentImageIndex ? 'active' : ''}"
 									on:click={() => selectImage(i)}
 								>
-									<img
-										src={imgUrl}
-										alt={title}
-										class="gallery-image"
-									/>
+									<img src={imgUrl} alt={title} class="gallery-image" />
 								</button>
 							{/each}
 						</div>
@@ -233,14 +223,9 @@
 		grid-template-columns: 2fr 1fr;
 		gap: var(--spacing-2xl);
 	}
-	@media (max-width: 768px) {
-		.details-grid {
-			grid-template-columns: 1fr;
-		}
-	}
 	.gallery-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
 		gap: var(--spacing-md);
 		margin-top: var(--spacing-md);
 	}
@@ -264,7 +249,7 @@
 	}
 	.gallery-image {
 		width: 100%;
-		height: 100px;
+		height: 90px;
 		object-fit: cover;
 		display: block;
 	}
@@ -354,6 +339,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: 4px;
 		font-family: inherit;
+		font-size: 16px;
 	}
 	.full-width {
 		width: 100%;
@@ -363,7 +349,7 @@
 	.main-image-container {
 		position: relative;
 		width: 100%;
-		height: 400px;
+		height: 420px;
 	}
 
 	.main-image {
@@ -412,5 +398,34 @@
 		border-radius: 12px;
 		font-size: 0.9rem;
 		z-index: 10;
+	}
+
+	@media (max-width: 768px) {
+		.details-grid {
+			grid-template-columns: 1fr;
+			gap: var(--spacing-lg);
+		}
+		.main-image-container {
+			height: 260px;
+		}
+		.gallery-grid {
+			grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+			gap: 0.5rem;
+		}
+		.gallery-image {
+			height: 65px;
+		}
+		.details-info-bar {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 1rem;
+			padding: 1rem;
+		}
+		.details-title {
+			font-size: 1.5rem;
+		}
+		.contact-card {
+			position: static;
+			padding: 1.25rem;
+		}
 	}
 </style>

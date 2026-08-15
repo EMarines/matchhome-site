@@ -248,15 +248,38 @@
 		border-color: var(--color-primary);
 	}
 	@media (max-width: 768px) {
+		.filters-container {
+			padding: var(--spacing-md);
+			gap: var(--spacing-md);
+		}
 		.filters-grid {
 			flex-direction: column;
 			align-items: stretch;
+			gap: var(--spacing-md);
+		}
+		.filter-group {
+			width: 100%;
 		}
 		.filter-group select,
 		.filter-group input {
 			width: 100%;
+			font-size: 16px; /* Previene auto-zoom en iOS Safari */
 		}
-		.clear-btn {
+		.price-group {
+			min-width: 100%;
+		}
+		.price-inputs {
+			display: grid;
+			grid-template-columns: 1fr auto 1fr;
+			gap: 0.5rem;
+			align-items: center;
+		}
+		.filter-actions {
+			flex-direction: column;
+			width: 100%;
+		}
+		.clear-btn,
+		.filter-actions button {
 			width: 100%;
 		}
 	}
@@ -267,6 +290,7 @@
 		height: 42px;
 		align-self: flex-start;
 		background: transparent;
+		font-weight: 600;
 	}
 	.clear-btn:hover {
 		background: var(--color-secondary);

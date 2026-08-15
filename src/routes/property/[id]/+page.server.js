@@ -10,7 +10,10 @@ export async function load({ params, locals }) {
   }
 
   try {
-    const doc = await db.collection('easybroker_properties').doc(id).get();
+    let doc = await db.collection('properties').doc(id).get();
+    if (!doc.exists) {
+      doc = await db.collection('easybroker_properties').doc(id).get();
+    }
     
     if (doc.exists) {
       return {

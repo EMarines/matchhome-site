@@ -107,11 +107,8 @@
 <section class="section container">
 	<h2 class="section-title">Propiedades Destacadas</h2>
 
-	<div
-		class="filters-header"
-		style="margin-bottom: var(--spacing-lg); display: flex; justify-content: space-between; align-items: center;"
-	>
-		<button class="btn btn-secondary" on:click={() => (showFilters = !showFilters)}>
+	<div class="filters-header">
+		<button class="btn btn-secondary filter-toggle-btn" on:click={() => (showFilters = !showFilters)}>
 			{showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
 		</button>
 	</div>
@@ -163,6 +160,12 @@
 </section>
 
 <style>
+	.filters-header {
+		margin-bottom: var(--spacing-lg);
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+	}
 	.properties-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -193,5 +196,26 @@
 	button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 600px) {
+		.properties-grid {
+			grid-template-columns: 1fr;
+			gap: 1.25rem;
+		}
+		.filter-toggle-btn {
+			width: 100%;
+		}
+		.pagination-controls {
+			gap: 0.5rem;
+		}
+		.pagination-controls button {
+			padding: 0.6rem 1rem;
+			font-size: 0.9rem;
+		}
+		.features-grid {
+			grid-template-columns: 1fr;
+			gap: 1.5rem;
+		}
 	}
 </style>

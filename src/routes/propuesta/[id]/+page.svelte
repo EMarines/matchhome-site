@@ -148,8 +148,38 @@
 	}
 
 	@media (max-width: 768px) {
+		.proposal-header {
+			padding: 2.5rem 1rem 4.5rem;
+		}
+		.greeting-content h1 {
+			font-size: 1.8rem;
+		}
 		.anchor-card {
 			grid-template-columns: 1fr;
+		}
+		.anchor-image-container {
+			min-height: 240px;
+		}
+		.anchor-price-tag {
+			font-size: 1rem;
+			padding: 6px 12px;
+			top: 12px;
+			left: 12px;
+		}
+		.anchor-details {
+			padding: 1.25rem;
+		}
+		.anchor-details h3 {
+			font-size: 1.35rem;
+		}
+		.anchor-features {
+			flex-wrap: wrap;
+			gap: 0.75rem;
+			font-size: 0.9rem;
+		}
+		.properties-grid {
+			grid-template-columns: 1fr;
+			gap: 1.25rem;
 		}
 	}
 
