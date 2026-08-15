@@ -123,7 +123,7 @@
 	{/if}
 
 	<div class="properties-grid">
-		{#each properties as property (property.public_id || Math.random())}
+		{#each properties as property (property.public_id || property.easybroker_id || property.id || property.title)}
 			<PropertyCard {property} />
 		{/each}
 	</div>

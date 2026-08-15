@@ -40,8 +40,34 @@
 	function selectImage(index) {
 		currentImageIndex = index;
 	}
+	function extractDescription(p) {
+		if (!p) return 'Sin descripción disponible.';
+		const raw =
+			p.description ||
+			p.descripcion ||
+			p.public_description ||
+			p.descripcion_publica ||
+			p.detalles ||
+			p.details ||
+			p.observaciones ||
+			p.property_description ||
+			p.private_description ||
+			p.desc;
+
+		if (!raw) return 'Sin descripción disponible.';
+		if (typeof raw === 'string') {
+			const trimmed = raw.trim();
+			return trimmed.length > 0 ? trimmed : 'Sin descripción disponible.';
+		}
+		if (typeof raw === 'object') {
+			const str = raw.text || raw.content || raw.value || raw.html || '';
+			return str.trim().length > 0 ? str.trim() : 'Sin descripción disponible.';
+		}
+		return String(raw);
+	}
+
 	$: title = property.titulo || property.title || 'Propiedad sin título';
-	$: description = property.descripcion || property.description || 'Sin descripción disponible.';
+	$: description = extractDescription(property);
 	$: locationStr =
 		property.colonia ||
 		property.ubicacion ||
@@ -84,10 +110,27 @@
 	// Navigation state fallback
 	$: backUrl = $page.url.searchParams.get('backUrl') || '/';
 	$: fromProposal = $page.url.searchParams.get('fromProposal') === 'true';
+
+	// Clean text for meta description and schema.org JSON-LD
+	$: cleanDescription = description.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
+	$: jsonLd = JSON.stringify({
+		'@context': 'https://schema.org',
+		'@type': 'RealEstateListing',
+		name: title,
+		description: cleanDescription,
+		image: galleryImages[0] || undefined,
+		offers: {
+			'@type': 'Offer',
+			price: property.precio || (property.operations && property.operations[0]?.amount) || undefined,
+			priceCurrency: property.moneda || (property.operations && property.operations[0]?.currency) || 'MXN'
+		}
+	});
 </script>
 
 <svelte:head>
 	<title>{title} - MatchHome</title>
+	<meta name="description" content={cleanDescription.substring(0, 160)} />
+	{@html `<script type="application/ld+json">${jsonLd}</script>`}
 </svelte:head>
 
 <div class="property-details-page">

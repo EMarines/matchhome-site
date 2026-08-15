@@ -7,7 +7,11 @@
 	$: image =
 		property.imagenPrincipal ||
 		property.imagenMiniatura ||
-		(property.images && property.images.length > 0 && typeof property.images[0] === 'string' ? property.images[0] : null) ||
+		(property.images && property.images.length > 0
+			? typeof property.images[0] === 'string'
+				? property.images[0]
+				: property.images[0]?.url
+			: null) ||
 		(property.property_images &&
 			property.property_images.length > 0 &&
 			property.property_images[0].url) ||
@@ -166,6 +170,7 @@
 		color: var(--color-text-main);
 		line-height: 1.35;
 		display: -webkit-box;
+		line-clamp: 2;
 		-webkit-line-clamp: 2;
 		-webkit-box-orient: vertical;
 		overflow: hidden;

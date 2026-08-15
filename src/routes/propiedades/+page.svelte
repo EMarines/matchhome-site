@@ -11,7 +11,7 @@
 		<p>No hay propiedades disponibles por el momento.</p>
 	{:else}
 		<div class="grid">
-			{#each properties as property (property.easybroker_id || property.public_id || property.id || Math.random())}
+			{#each properties as property (property.public_id || property.easybroker_id || property.id || property.title)}
 				<PropertyCard {property} />
 			{/each}
 		</div>

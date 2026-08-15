@@ -18,12 +18,13 @@
 <header class="header">
 	<div class="container header-container">
 		<div class="logo">
-			<a href="/">
+			<a href="/" class="logo-link">
 				{#if $page.data.tenant?.theme?.logo}
 					<img src={$page.data.tenant.theme.logo} alt={$page.data.tenant.name} class="logo-img" />
 				{:else}
 					<h1>{$page.data.tenant?.name || 'MatchHome'}</h1>
 				{/if}
+				<span class="logo-slogan">Tu patrimonio en buenas manos</span>
 			</a>
 		</div>
 
@@ -75,17 +76,34 @@
 		align-items: center;
 		width: 100%;
 	}
+	.logo-link {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		text-decoration: none;
+	}
 	.logo h1 {
 		color: var(--color-primary);
 		font-size: 1.6rem;
 		font-weight: 800;
 		letter-spacing: -0.5px;
+		margin: 0;
 	}
 	.logo-img {
-		height: 40px;
+		height: 38px;
 		width: auto;
 		max-width: 180px;
 		object-fit: contain;
+	}
+	.logo-slogan {
+		font-family: 'Segoe Print', 'Segoe Script', 'Comic Sans MS', cursive, sans-serif;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--color-primary);
+		margin-top: 1px;
+		line-height: 1.1;
+		white-space: nowrap;
 	}
 	.nav-list {
 		display: flex;

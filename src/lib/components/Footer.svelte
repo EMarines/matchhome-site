@@ -15,6 +15,7 @@
 				{:else}
 					<h3 class="footer-logo">{$page.data.tenant?.name || 'MatchHome'}</h3>
 				{/if}
+				<span class="footer-slogan">Tu patrimonio en buenas manos</span>
 			</a>
 			<p class="footer-desc">
 				Tu aliado confiable para encontrar la propiedad de tus sueños. Experiencia, seguridad y
@@ -35,7 +36,7 @@
 			<ul class="footer-contact">
 				<li>📍 Av. Francisco Villa # 5700, Col. Panamericana</li>
 				<li>📞 <a href="tel:6145404003">614 540 4003</a></li>
-				<li>✉️ <a href="mailto:contacto@matchhome.com">contacto@matchhome.com</a></li>
+				<li>✉️ <a href="mailto:matchhomebr@gmail.com">matchhomebr@gmail.com</a></li>
 			</ul>
 		</div>
 	</div>
@@ -57,8 +58,10 @@
 		padding-bottom: var(--spacing-2xl);
 	}
 	.footer-logo-link {
-		display: inline-block;
+		display: inline-flex;
+		flex-direction: column;
 		margin-bottom: var(--spacing-md);
+		text-decoration: none;
 	}
 	.footer-logo {
 		font-size: var(--font-size-2xl);
@@ -70,6 +73,13 @@
 		width: auto;
 		max-width: 200px;
 		object-fit: contain;
+	}
+	.footer-slogan {
+		font-family: 'Segoe Print', 'Segoe Script', 'Comic Sans MS', cursive, sans-serif;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--color-secondary, #d9a036);
+		margin-top: 4px;
 	}
 	.footer-desc {
 		color: #ccc;
@@ -110,6 +120,9 @@
 			grid-template-columns: 1fr;
 			text-align: center;
 			gap: var(--spacing-xl);
+		}
+		.footer-logo-link {
+			align-items: center;
 		}
 		.footer-logo-img {
 			margin: 0 auto;
