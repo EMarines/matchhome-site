@@ -2,18 +2,23 @@ export function filterProperties(inventoryData, search, filters, page = 1, limit
   const term = search.toLowerCase();
   
   const filtered = inventoryData.filter(p => {
-    const title = (p.title || '').toLowerCase();
+    const title = (p.titulo || p.title || '').toLowerCase();
     const locationObj = p.location || {};
     const locationName = typeof p.location === 'object' 
       ? [locationObj.name, locationObj.city, locationObj.region, locationObj.city_area].filter(Boolean).join(' ') 
-      : (p.location || '');
+      : (p.colonia || p.ubicacion || p.location || '');
     const location = locationName.toLowerCase();
-    const type = (p.property_type || '').toLowerCase();
-    const matchesText = !term || title.includes(term) || location.includes(term) || type.includes(term);
+    const type = (p.tipoPropiedad || p.property_type || '').toLowerCase();
+    const id = (p.easybroker_id || p.public_id || p.id || '').toLowerCase();
+    const matchesText = !term || title.includes(term) || location.includes(term) || type.includes(term) || id.includes(term);
 
-    const matchesBedrooms = !filters.bedrooms || (p.bedrooms >= parseInt(filters.bedrooms));
-    const matchesBathrooms = !filters.bathrooms || (p.bathrooms >= parseInt(filters.bathrooms));
-    const matchesParking = !filters.parking || (p.parking_spaces >= parseInt(filters.parking));
+    const beds = p.recamaras ?? p.bedrooms ?? 0;
+    const baths = p.banos ?? p.bathrooms ?? 0;
+    const parking = p.estacionamientos ?? p.parking_spaces ?? 0;
+
+    const matchesBedrooms = !filters.bedrooms || (beds >= parseInt(filters.bedrooms));
+    const matchesBathrooms = !filters.bathrooms || (baths >= parseInt(filters.bathrooms));
+    const matchesParking = !filters.parking || (parking >= parseInt(filters.parking));
 
     // Price & Operation Filter
     const min = filters.minPrice ? parseFloat(filters.minPrice) : 0;
@@ -21,34 +26,37 @@ export function filterProperties(inventoryData, search, filters, page = 1, limit
     let matchesPrice = false;
     let matchesOperationType = false;
 
-    if (p.operations && p.operations.length > 0) {
-      // Si hay un filtro de tipo de operación, buscamos esa operación específica
+    const operations = p.operaciones || p.operations;
+    const priceVal = p.precio ?? (operations && operations[0] ? operations[0].amount : 0);
+    const opTypeVal = p.tipoOperacion || (operations && operations[0] ? operations[0].type : '');
+
+    if (operations && operations.length > 0) {
       if (filters.operationType) {
-        const op = p.operations.find(o => o.type === filters.operationType);
+        const op = operations.find(o => (o.type || '').toLowerCase() === filters.operationType.toLowerCase());
         if (op) {
           matchesOperationType = true;
-          const price = op.amount;
+          const price = op.amount || p.precio || 0;
           matchesPrice = (price >= min && price <= max);
         }
       } else {
-        // Si no hay filtro de operación, buscamos SI ALGUNA operación cumple con el rango de precio
-        // Esto es un poco ambiguo (podría mostrar una casa de venta cuando buscas renta si los rangos se solapan),
-        // pero es mejor que no mostrar nada.
-        matchesOperationType = true; // No se está filtrando por operación
-        matchesPrice = p.operations.some(op => {
-          const price = op.amount;
+        matchesOperationType = true;
+        matchesPrice = operations.some(op => {
+          const price = op.amount || p.precio || 0;
           return price >= min && price <= max;
         });
       }
+    } else if (p.precio || p.tipoOperacion) {
+      matchesOperationType = !filters.operationType || (opTypeVal.toLowerCase().includes(filters.operationType.toLowerCase()));
+      matchesPrice = (priceVal >= min && priceVal <= max);
     } else {
-        // Si no hay operaciones, no mostramos (o mostramos si no hay filtros de precio/op)
-        matchesOperationType = !filters.operationType;
-        matchesPrice = !filters.minPrice && !filters.maxPrice;
+      matchesOperationType = !filters.operationType;
+      matchesPrice = !filters.minPrice && !filters.maxPrice;
     }
 
     // Property Type Filter (Case Insensitive)
+    const propTypeStr = p.tipoPropiedad || p.property_type || '';
     const matchesPropertyType = !filters.propertyType || 
-      (p.property_type && p.property_type.toLowerCase() === filters.propertyType.toLowerCase());
+      (propTypeStr && propTypeStr.toLowerCase().includes(filters.propertyType.toLowerCase()));
 
     // Tags Filter
     const normalizeText = (text) => {

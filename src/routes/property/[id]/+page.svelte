@@ -15,16 +15,24 @@
 
 	// Image Gallery Logic
 	$: galleryImages =
-		property.property_images && property.property_images.length > 0
+		property.images && property.images.length > 0
+			? property.images.map((img) => typeof img === 'string' ? img : img.url || img)
+			: property.property_images && property.property_images.length > 0
 			? property.property_images.map((img) => img.url)
-			: [property.title_image_full || property.title_image_thumb || '/placeholder.jpg'];
+			: [
+					property.imagenPrincipal ||
+					property.imagenMiniatura ||
+					property.title_image_full ||
+					property.title_image_thumb ||
+					'/placeholder.jpg'
+			  ];
 
 	let currentImageIndex = 0;
 
 	// Reset index when property changes
 	$: if (property) currentImageIndex = 0;
 
-	$: image = galleryImages[currentImageIndex];
+	$: image = galleryImages[currentImageIndex] || '/placeholder.jpg';
 
 	function nextImage() {
 		if (galleryImages.length > 1) {
@@ -41,19 +49,23 @@
 	function selectImage(index) {
 		currentImageIndex = index;
 	}
-	$: title = property.title || 'Propiedad sin título';
-	$: description = property.description || 'Sin descripción disponible.';
+	$: title = property.titulo || property.title || 'Propiedad sin título';
+	$: description = property.descripcion || property.description || 'Sin descripción disponible.';
 	$: locationStr =
-		typeof property.location === 'object'
+		property.colonia ||
+		property.ubicacion ||
+		(typeof property.location === 'object'
 			? property.location.name
-			: property.location || 'Ubicación no disponible';
+			: property.location || 'Ubicación no disponible');
 
 	$: price =
-		property.operations && property.operations.length > 0
+		property.precioFormateado ||
+		(property.precio ? `$${Number(property.precio).toLocaleString('es-MX')} ${property.moneda || 'MXN'}` : null) ||
+		(property.operations && property.operations.length > 0
 			? property.operations[0].formatted_amount ||
 				property.operations[0].formated_amount ||
 				`${property.operations[0].amount} ${property.operations[0].currency}`
-			: 'Precio a consultar';
+			: 'Precio a consultar');
 
 	function getOperationType(type) {
 		const types = {
@@ -65,14 +77,15 @@
 	}
 
 	$: type =
-		property.operations && property.operations.length > 0
+		property.tipoOperacion ||
+		(property.operations && property.operations.length > 0
 			? getOperationType(property.operations[0].type)
-			: 'Venta/Renta';
+			: 'Venta/Renta');
 
-	$: beds = property.bedrooms || 0;
-	$: baths = property.bathrooms || 0;
-	$: area = property.construction_size || property.lot_size || 0;
-	$: features = property.features || [];
+	$: beds = property.recamaras || property.bedrooms || 0;
+	$: baths = property.banos || property.bathrooms || 0;
+	$: area = property.construccion || property.terreno || property.construction_size || property.lot_size || 0;
+	$: features = property.amenidades || property.features || [];
 
 	// Navigation state fallback
 	$: backUrl = $page.url.searchParams.get('backUrl') || '/';
@@ -107,15 +120,20 @@
 							</div>
 						{/if}
 					</div>
-					{#if property.property_images && property.property_images.length > 0}
+					{#if galleryImages && galleryImages.length > 1}
 						<div class="gallery-grid">
-							{#each property.property_images.slice(0, 4) as img, i}
-								<img
-									src={img.url}
-									alt={img.title || title}
-									class="gallery-image {i === currentImageIndex ? 'active' : ''}"
+							{#each galleryImages.slice(0, 6) as imgUrl, i}
+								<button
+									type="button"
+									class="gallery-thumb-btn {i === currentImageIndex ? 'active' : ''}"
 									on:click={() => selectImage(i)}
-								/>
+								>
+									<img
+										src={imgUrl}
+										alt={title}
+										class="gallery-image"
+									/>
+								</button>
 							{/each}
 						</div>
 					{/if}
@@ -226,16 +244,29 @@
 		gap: var(--spacing-md);
 		margin-top: var(--spacing-md);
 	}
+	.gallery-thumb-btn {
+		background: none;
+		border: 2px solid transparent;
+		padding: 0;
+		margin: 0;
+		cursor: pointer;
+		border-radius: 6px;
+		overflow: hidden;
+		transition: border-color 0.2s, opacity 0.2s;
+		display: block;
+		width: 100%;
+	}
+	.gallery-thumb-btn:hover {
+		opacity: 0.85;
+	}
+	.gallery-thumb-btn.active {
+		border-color: var(--color-primary);
+	}
 	.gallery-image {
 		width: 100%;
 		height: 100px;
 		object-fit: cover;
-		border-radius: 4px;
-		cursor: pointer;
-		transition: opacity 0.2s;
-	}
-	.gallery-image:hover {
-		opacity: 0.8;
+		display: block;
 	}
 	.details-info-bar {
 		display: grid;
@@ -381,10 +412,5 @@
 		border-radius: 12px;
 		font-size: 0.9rem;
 		z-index: 10;
-	}
-
-	.gallery-image.active {
-		border: 2px solid var(--color-primary);
-		opacity: 1;
 	}
 </style>

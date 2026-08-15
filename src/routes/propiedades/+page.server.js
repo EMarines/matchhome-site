@@ -5,8 +5,11 @@ export async function load({ locals }) {
   const tenant = locals.tenant;
 
   try {
-    const snapshot = await db.collection('properties').get();
-    const properties = snapshot.docs.map(doc => doc.data());
+    if (!db) {
+      return { properties: [], tenant, error: 'Firebase no está configurado. Revisa el .env.' };
+    }
+    const snapshot = await db.collection('easybroker_properties').get();
+    const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     return {
       properties: serializeFirestoreData(properties),

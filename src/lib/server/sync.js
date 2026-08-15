@@ -1,34 +1,23 @@
 import { getFirebaseInstance } from './firebase';
+import { fetchJsonWithRetry, sleep } from './rateLimit';
 
 const EASYBROKER_API_URL = 'https://api.easybroker.com/v1';
 
 export async function fetchProperties(apiKey, page = 1, limit = 50) {
-  const response = await fetch(`${EASYBROKER_API_URL}/properties?page=${page}&limit=${limit}`, {
-    headers: {
-      'X-Authorization': apiKey
-    }
+  return fetchJsonWithRetry(`${EASYBROKER_API_URL}/properties?page=${page}&limit=${limit}`, {
+    'X-Authorization': apiKey
   });
-  
-  if (!response.ok) {
-    throw new Error(`EasyBroker API error: ${response.statusText}`);
-  }
-  
-  return await response.json();
 }
 
 export async function fetchPropertyDetails(apiKey, propertyId) {
-  const response = await fetch(`${EASYBROKER_API_URL}/properties/${propertyId}`, {
-    headers: {
+  try {
+    return await fetchJsonWithRetry(`${EASYBROKER_API_URL}/properties/${propertyId}`, {
       'X-Authorization': apiKey
-    }
-  });
-
-  if (!response.ok) {
-    console.error(`Failed to fetch details for property ${propertyId}: ${response.statusText}`);
+    });
+  } catch (error) {
+    console.error(`Failed to fetch details for property ${propertyId}:`, error.message);
     return null;
   }
-
-  return await response.json();
 }
 
 // Detect zones from location data
@@ -130,14 +119,14 @@ export async function syncTenantProperties(tenant) {
         // Fetch details for each property in the current page
         console.log(`Fetching details for ${pageProperties.length} properties on page ${page}...`);
         
-        // Process in parallel but with some caution if needed. 
-        // For now, Promise.all is usually fine for 50 items unless rate limits are very strict.
-        const detailedPropertiesPromises = pageProperties.map(async (summaryProp) => {
-            const details = await fetchPropertyDetails(apiKey, summaryProp.public_id);
-            return details || summaryProp; // Fallback to summary if details fail
-        });
+        // Procesar de forma secuencial para no saturar EasyBroker.
+        const detailedProperties = [];
+        for (const summaryProp of pageProperties) {
+          const details = await fetchPropertyDetails(apiKey, summaryProp.public_id);
+          detailedProperties.push(details || summaryProp);
+          await sleep(350);
+        }
 
-        const detailedProperties = await Promise.all(detailedPropertiesPromises);
         allProperties = [...allProperties, ...detailedProperties];
         
         // Check if we have more pages
@@ -168,7 +157,7 @@ export async function syncTenantProperties(tenant) {
 
     for (const chunk of chunks) {
         const batch = db.batch();
-        const collectionRef = db.collection('properties');
+        const collectionRef = db.collection('easybroker_properties');
         
         chunk.forEach(property => {
       // Usamos public_id como ID del documento para evitar duplicados

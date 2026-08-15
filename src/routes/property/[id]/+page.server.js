@@ -5,12 +5,16 @@ export async function load({ params, locals }) {
   const { id } = params;
   const db = locals.db;
 
+  if (!db) {
+    throw error(503, 'Firebase no está configurado. Agrega el Service Account al .env.');
+  }
+
   try {
-    const doc = await db.collection('properties').doc(id).get();
+    const doc = await db.collection('easybroker_properties').doc(id).get();
     
     if (doc.exists) {
       return {
-        property: serializeFirestoreData(doc.data())
+        property: serializeFirestoreData({ id: doc.id, ...doc.data() })
       };
     }
   } catch (e) {

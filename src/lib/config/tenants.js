@@ -1,28 +1,26 @@
+import { env } from '$env/dynamic/private';
+
 export const tenants = {
   'localhost': {
     id: 'dev-tenant',
     name: 'Inmobiliaria Demo',
-    // En producción, esto vendría de variables de entorno o un gestor de secretos
-    // Para desarrollo, usaremos un proyecto de Firebase de prueba o emuladores
     firebaseConfig: {
-      projectId: 'jgcapitaldb', // ID real de tu proyecto
-      // serviceAccountPath solo se usará si NODE_ENV es development
-      serviceAccountPath: './secrets/firebase-admin-dev.json' 
+      projectId: env.FIREBASE_PROJECT_ID || 'matchhome-crm-46de4',
     },
-    easyBrokerKey: 'pqnjps13ry7iaudododsi455mg22mt', // Demo Key
+    easyBrokerKey: env.EASYBROKER_API_KEY || '',
     theme: {
       primary: '#0056b3',
       secondary: '#c5a059',
-      logo: '/logo.png' // Necesitaremos poner un logo genérico en static/
+      logo: '/logo.png'
     }
   },
   'cliente-alpha.com': {
     id: 'alpha',
     name: 'Alpha Real Estate',
     firebaseConfig: {
-      projectId: 'alpha-project'
+      projectId: env.FIREBASE_PROJECT_ID_ALPHA || 'alpha-project'
     },
-    easyBrokerKey: 'KEY_ALPHA',
+    easyBrokerKey: env.EASYBROKER_API_KEY_ALPHA || '',
     theme: {
       primary: '#FF0000',
       secondary: '#000000',

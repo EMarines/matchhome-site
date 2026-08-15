@@ -3,25 +3,32 @@
 	export let backUrl = null;
 	export let fromProposal = false;
 
-	// Map EasyBroker fields to our UI
+	// Map EasyBroker and MatchHome CRM fields to our UI
 	$: image =
+		property.imagenPrincipal ||
+		property.imagenMiniatura ||
+		(property.images && property.images.length > 0 && typeof property.images[0] === 'string' ? property.images[0] : null) ||
 		(property.property_images &&
 			property.property_images.length > 0 &&
 			property.property_images[0].url) ||
 		property.title_image_thumb ||
 		property.title_image_full ||
 		'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22400%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A20pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22400%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22130%22%20y%3D%22158%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
-	$: title = property.title || 'Propiedad sin título';
+	$: title = property.titulo || property.title || 'Propiedad sin título';
 	$: location =
-		typeof property.location === 'object'
+		property.colonia ||
+		property.ubicacion ||
+		(typeof property.location === 'object'
 			? property.location.name
-			: property.location || 'Ubicación no disponible';
+			: property.location || 'Ubicación no disponible');
 	$: price =
-		property.operations && property.operations.length > 0
+		property.precioFormateado ||
+		(property.precio ? `$${Number(property.precio).toLocaleString('es-MX')} ${property.moneda || 'MXN'}` : null) ||
+		(property.operations && property.operations.length > 0
 			? property.operations[0].formatted_amount ||
 				property.operations[0].formated_amount ||
 				`${property.operations[0].amount} ${property.operations[0].currency}`
-			: 'Precio a consultar';
+			: 'Precio a consultar');
 
 	function getOperationType(type) {
 		const types = {
@@ -33,52 +40,60 @@
 	}
 
 	$: status =
-		property.operations && property.operations.length > 0
+		property.tipoOperacion ||
+		(property.operations && property.operations.length > 0
 			? getOperationType(property.operations[0].type)
-			: 'Venta/Renta';
-	$: beds = property.bedrooms || 0;
-	$: baths = property.bathrooms || 0;
-	$: area = property.construction_size || property.lot_size || 0;
-	$: id = property.public_id;
+			: 'Venta/Renta');
+	$: beds = property.recamaras || property.bedrooms || 0;
+	$: baths = property.banos || property.bathrooms || 0;
+	$: area = property.construccion || property.terreno || property.construction_size || property.lot_size || 0;
+	$: id = property.easybroker_id || property.public_id || property.id || property.clavePropiedad;
 
 	$: tags =
-		property.tags?.length > 0
+		property.amenidades?.length > 0
+			? property.amenidades
+			: property.tags?.length > 0
 			? property.tags
-			: (property.features || []).slice(0, 3).map((f) => f.name);
+			: (property.features || []).slice(0, 3).map((f) => typeof f === 'string' ? f : f.name);
 </script>
 
-<div class="property-card">
-	<div class="card-image-wrapper">
-		<img src={image} alt={title} class="card-image" />
-		<span class="card-status">{status}</span>
-		<span class="card-id">{id}</span>
-		<span class="card-price">{price}</span>
-	</div>
-	<div class="card-content">
-		<h3 class="card-title">{title}</h3>
-		<p class="card-location">{location}</p>
-		<div class="card-features">
-			<span class="feature"><i class="icon">🛏</i> {beds} Rec.</span>
-			<span class="feature"><i class="icon">🚿</i> {baths} Baños</span>
-			<span class="feature"><i class="icon">📐</i> {area} m²</span>
+<a 
+	href={`/property/${id}${backUrl ? `?backUrl=${encodeURIComponent(backUrl)}&fromProposal=${fromProposal}` : ''}`} 
+	class="property-card-link"
+>
+	<div class="property-card">
+		<div class="card-image-wrapper">
+			<img src={image} alt={title} class="card-image" />
+			<span class="card-status">{status}</span>
+			<span class="card-id">{id}</span>
+			<span class="card-price">{price}</span>
 		</div>
-		{#if tags.length > 0}
-			<div class="card-tags">
-				{#each tags as tag}
-					<span class="card-tag">{tag}</span>
-				{/each}
+		<div class="card-content">
+			<h3 class="card-title">{title}</h3>
+			<p class="card-location">{location}</p>
+			<div class="card-features">
+				<span class="feature"><i class="icon">🛏</i> {beds} Rec.</span>
+				<span class="feature"><i class="icon">🚿</i> {baths} Baños</span>
+				<span class="feature"><i class="icon">📐</i> {area} m²</span>
 			</div>
-		{/if}
-		<a 
-			href={`/property/${id}${backUrl ? `?backUrl=${encodeURIComponent(backUrl)}&fromProposal=${fromProposal}` : ''}`} 
-			class="btn btn-secondary card-btn"
-		>
-			Ver Detalles
-		</a>
+			{#if tags.length > 0}
+				<div class="card-tags">
+					{#each tags as tag}
+						<span class="card-tag">{tag}</span>
+					{/each}
+				</div>
+			{/if}
+			<span class="btn btn-secondary card-btn">Ver Detalles</span>
+		</div>
 	</div>
-</div>
+</a>
 
 <style>
+	.property-card-link {
+		text-decoration: none;
+		color: inherit;
+		display: block;
+	}
 	.property-card {
 		background: var(--color-white);
 		border-radius: 8px;

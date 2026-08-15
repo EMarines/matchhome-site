@@ -1,9 +1,59 @@
 import admin from 'firebase-admin';
-import { readFile } from 'fs/promises';
-import { resolve } from 'path';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { env } from '$env/dynamic/private';
 
 // Cache para mantener las instancias de Firebase activas
 const firebaseApps = {};
+
+function buildCredentialFromEnv() {
+  const privateKey = env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const clientEmail = env.FIREBASE_CLIENT_EMAIL;
+
+  if (!privateKey || !clientEmail) {
+    return null;
+  }
+
+  return admin.credential.cert({
+    type: 'service_account',
+    project_id: env.FIREBASE_PROJECT_ID,
+    private_key_id: env.FIREBASE_PRIVATE_KEY_ID,
+    private_key: privateKey,
+    client_email: clientEmail,
+    client_id: env.FIREBASE_CLIENT_ID,
+    auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+    token_uri: 'https://oauth2.googleapis.com/token',
+  });
+}
+
+async function buildCredentialFromServiceAccountFile() {
+  const candidates = [
+    process.env.GOOGLE_APPLICATION_CREDENTIALS,
+    env.FIREBASE_SERVICE_ACCOUNT_PATH,
+    './secrets/firebase-admin-dev.json',
+    resolve(process.cwd(), 'secrets/firebase-admin-dev.json')
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    try {
+      const absolutePath = candidate.startsWith('/') || /^[A-Za-z]:[\\/]/.test(candidate)
+        ? candidate
+        : resolve(process.cwd(), candidate);
+
+      const fileContent = await readFile(absolutePath, 'utf8');
+      const serviceAccount = JSON.parse(fileContent);
+
+      if (serviceAccount.private_key && serviceAccount.client_email) {
+        console.log(`Using service account credentials from ${absolutePath}`);
+        return admin.credential.cert(serviceAccount);
+      }
+    } catch {
+      // Intentar con la siguiente candidata
+    }
+  }
+
+  return null;
+}
 
 export async function getFirebaseInstance(tenantConfig) {
   const tenantId = tenantConfig.id;
@@ -13,42 +63,35 @@ export async function getFirebaseInstance(tenantConfig) {
   }
 
   try {
-    // Check if app already exists in admin.apps list to avoid duplicates
+    // Evitar duplicados si ya está inicializado
     const existingApp = admin.apps.find(app => app && app.name === tenantId);
     if (existingApp) {
       firebaseApps[tenantId] = existingApp.firestore();
       return firebaseApps[tenantId];
     }
 
-    // Cargar credenciales
-    let credential;
-    
-    if (process.env.NODE_ENV === 'development' && tenantConfig.firebaseConfig.serviceAccountPath) {
-      // Desarrollo: Cargar desde archivo local
-      const serviceAccountPath = resolve(process.cwd(), tenantConfig.firebaseConfig.serviceAccountPath);
-      const serviceAccount = JSON.parse(await readFile(serviceAccountPath, 'utf-8'));
-      credential = admin.credential.cert(serviceAccount);
-    } else {
-      // Producción: Usar Application Default Credentials (si está configurado en Vercel)
-      // O intentar cargar desde variable de entorno si existe
+    // Intentar construir credencial desde variables de entorno o desde el JSON local
+    const credential = buildCredentialFromEnv();
+    const serviceAccountCredential = await buildCredentialFromServiceAccountFile();
+    const resolvedCredential = credential || serviceAccountCredential;
+
+    if (!resolvedCredential) {
+      // Fallback: Application Default Credentials (para Vercel / Cloud Run)
       if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-         credential = admin.credential.applicationDefault();
+        console.log(`Using GOOGLE_APPLICATION_CREDENTIALS for tenant ${tenantId}`);
+      } else if (process.env.npm_lifecycle_event === 'build') {
+        console.log('Skipping Firebase init during build');
+        return null;
       } else {
-         console.warn(`No credentials found for ${tenantId}. Firebase Admin might not work.`);
-         // Return a placeholder or null if strict mode not required, or let it fail later
-         // For build purposes, we might want to skip initialization if no creds
-         if (process.env.npm_lifecycle_event === 'build') {
-             console.log('Skipping Firebase init during build');
-             return null; 
-         }
-         credential = admin.credential.applicationDefault();
+        console.warn(`No Firebase credentials found for ${tenantId}. Define FIREBASE_PRIVATE_KEY and FIREBASE_CLIENT_EMAIL in .env or place a service account JSON in secrets/`);
+        return null;
       }
     }
-    
+
     const app = admin.initializeApp({
-      credential,
+      credential: resolvedCredential || admin.credential.applicationDefault(),
       projectId: tenantConfig.firebaseConfig.projectId
-    }, tenantId); // Nombre único para la instancia
+    }, tenantId);
 
     const db = app.firestore();
     firebaseApps[tenantId] = db;
@@ -58,3 +101,4 @@ export async function getFirebaseInstance(tenantConfig) {
     throw error;
   }
 }
+

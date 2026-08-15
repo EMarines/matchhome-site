@@ -76,7 +76,7 @@ async function syncInventory(tenantId) {
       
       chunk.forEach(property => {
         // Usar public_id como ID del documento para evitar duplicados
-        const docRef = db.collection('properties').doc(property.public_id);
+        const docRef = db.collection('easybroker_properties').doc(property.public_id);
         
         // Añadir timestamp de actualización
         const dataToSave = {

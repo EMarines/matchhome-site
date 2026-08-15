@@ -4,9 +4,11 @@ export async function load({ locals }) {
   const db = locals.db;
   
   try {
-    // Obtener propiedades destacadas o recientes (limitado a 50 por ahora)
-    const snapshot = await db.collection('properties').limit(50).get();
-    const properties = snapshot.docs.map(doc => doc.data());
+    if (!db) {
+      return { properties: [], error: 'Firebase no está configurado. Revisa el .env.' };
+    }
+    const snapshot = await db.collection('easybroker_properties').get();
+    const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
     return {
       properties: serializeFirestoreData(properties)
