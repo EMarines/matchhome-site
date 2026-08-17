@@ -142,3 +142,9 @@ img {
     padding: 0 0.85rem;
   }
 }
+
+@media (max-width: 360px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+}

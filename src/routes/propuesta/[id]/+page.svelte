@@ -178,7 +178,7 @@
 			font-size: 0.9rem;
 		}
 		.properties-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 			gap: 1.25rem;
 		}
 	}
@@ -206,6 +206,10 @@
 		font-weight: 700;
 		font-size: 1.2rem;
 		backdrop-filter: blur(4px);
+		max-width: calc(100% - 40px);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.anchor-details {
@@ -262,7 +266,7 @@
 
 	.properties-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
 		gap: 2rem;
 	}
 

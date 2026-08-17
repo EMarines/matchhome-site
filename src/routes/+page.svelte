@@ -168,7 +168,7 @@
 	}
 	.properties-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
 		gap: var(--spacing-xl);
 	}
 	.features-grid {
@@ -200,7 +200,7 @@
 
 	@media (max-width: 600px) {
 		.properties-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 			gap: 1.25rem;
 		}
 		.filter-toggle-btn {
@@ -214,7 +214,7 @@
 			font-size: 0.9rem;
 		}
 		.features-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 			gap: 1.5rem;
 		}
 	}
