@@ -96,8 +96,10 @@
 	.property-card-link {
 		text-decoration: none;
 		color: inherit;
-		display: block;
+		display: flex;
+		flex-direction: column;
 		width: 100%;
+		height: 100%;
 		min-width: 0;
 		box-sizing: border-box;
 	}
@@ -111,6 +113,9 @@
 			box-shadow 0.2s;
 		margin: 0;
 		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
 		box-sizing: border-box;
 	}
 	.property-card:hover {
@@ -122,6 +127,7 @@
 		height: 240px;
 		width: 100%;
 		overflow: hidden;
+		flex-shrink: 0;
 	}
 	.card-image {
 		width: 100%;
@@ -181,6 +187,9 @@
 		padding: var(--spacing-md);
 		box-sizing: border-box;
 		width: 100%;
+		display: flex;
+		flex-direction: column;
+		flex: 1;
 	}
 	.card-title {
 		font-size: 1.1rem;
@@ -225,6 +234,7 @@
 		width: 100%;
 		text-align: center;
 		box-sizing: border-box;
+		margin-top: auto;
 	}
 	.card-tags {
 		display: flex;
