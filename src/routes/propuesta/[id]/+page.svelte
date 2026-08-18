@@ -119,7 +119,26 @@
 </script>
 
 <svelte:head>
-	<title>Propuesta para {displayName} - MatchHome</title>
+	<title>{anchorProperty?.title ? `${anchorProperty.title} - Propuesta MatchHome` : `Propuesta para ${displayName} - MatchHome`}</title>
+	<meta name="description" content={anchorProperty?.description ? anchorProperty.description.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim().substring(0, 200) : `Propuesta para ${displayName}`} />
+	
+	<!-- Open Graph Meta Tags (WhatsApp / Facebook Link Previews) -->
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content={anchorProperty?.title || `Propuesta para ${displayName} - MatchHome`} />
+	<meta property="og:description" content={anchorProperty?.description ? anchorProperty.description.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim().substring(0, 200) + '...' : `Propuesta personalizada de propiedades en MatchHome para ${displayName}`} />
+	{#if anchorImage && anchorImage !== NO_IMAGE_PLACEHOLDER}
+		<meta property="og:image" content={anchorImage} />
+		<meta property="og:image:secure_url" content={anchorImage} />
+	{/if}
+	<meta property="og:site_name" content="MatchHome" />
+
+	<!-- Twitter Card Meta Tags -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={anchorProperty?.title || `Propuesta para ${displayName}`} />
+	<meta name="twitter:description" content={anchorProperty?.description ? anchorProperty.description.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim().substring(0, 200) : `Propuesta inmobiliaria personalizada`} />
+	{#if anchorImage && anchorImage !== NO_IMAGE_PLACEHOLDER}
+		<meta name="twitter:image" content={anchorImage} />
+	{/if}
 </svelte:head>
 
 <div class="proposal-page">

@@ -148,6 +148,25 @@
 <svelte:head>
 	<title>{title} - MatchHome</title>
 	<meta name="description" content={cleanDescription.substring(0, 160)} />
+
+	<!-- Open Graph Meta Tags (WhatsApp / Social link previews) -->
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content={title} />
+	<meta property="og:description" content={cleanDescription.substring(0, 200)} />
+	{#if galleryImages[0] && galleryImages[0] !== NO_IMAGE_PLACEHOLDER}
+		<meta property="og:image" content={galleryImages[0]} />
+		<meta property="og:image:secure_url" content={galleryImages[0]} />
+	{/if}
+	<meta property="og:site_name" content="MatchHome" />
+
+	<!-- Twitter Card Meta Tags -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={title} />
+	<meta name="twitter:description" content={cleanDescription.substring(0, 200)} />
+	{#if galleryImages[0] && galleryImages[0] !== NO_IMAGE_PLACEHOLDER}
+		<meta name="twitter:image" content={galleryImages[0]} />
+	{/if}
+
 	{@html `<script type="application/ld+json">${jsonLd}</script>`}
 </svelte:head>
 
