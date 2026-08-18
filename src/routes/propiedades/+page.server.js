@@ -7,10 +7,7 @@ export async function load({ locals }) {
 
   try {
     if (db) {
-      let snapshot = await db.collection('properties').get();
-      if (snapshot.empty) {
-        snapshot = await db.collection('easybroker_properties').get();
-      }
+      const snapshot = await db.collection('properties').get();
       if (!snapshot.empty) {
         const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         return {

@@ -4,6 +4,9 @@
 	export let data;
 	$: property = data.property;
 
+	const NO_IMAGE_PLACEHOLDER =
+		'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22400%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A20pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22400%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22130%22%20y%3D%22158%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
+
 	// Image Gallery Logic
 	$: galleryImages =
 		property.images && property.images.length > 0
@@ -15,7 +18,7 @@
 						property.imagenMiniatura ||
 						property.title_image_full ||
 						property.title_image_thumb ||
-						'/placeholder.jpg'
+						NO_IMAGE_PLACEHOLDER
 			  ];
 
 	let currentImageIndex = 0;
@@ -23,7 +26,7 @@
 	// Reset index when property changes
 	$: if (property) currentImageIndex = 0;
 
-	$: image = galleryImages[currentImageIndex] || '/placeholder.jpg';
+	$: image = galleryImages[currentImageIndex] || NO_IMAGE_PLACEHOLDER;
 
 	function nextImage() {
 		if (galleryImages.length > 1) {
@@ -72,39 +75,54 @@
 		property.colonia ||
 		property.ubicacion ||
 		(typeof property.location === 'object'
-			? property.location.name
+			? property.location?.name
 			: property.location || 'Ubicación no disponible');
+
+	function formatPrice(val, curr) {
+		if (val === undefined || val === null || val === '') return null;
+		const num = Number(val);
+		if (isNaN(num) || num <= 0) return typeof val === 'string' && val.trim().length > 0 ? val : null;
+		return `$${num.toLocaleString('es-MX')} ${curr || 'MXN'}`;
+	}
 
 	$: price =
 		property.precioFormateado ||
-		(property.precio
-			? `$${Number(property.precio).toLocaleString('es-MX')} ${property.moneda || 'MXN'}`
-			: null) ||
+		formatPrice(property.price, property.moneda || property.currency) ||
+		formatPrice(property.precio, property.moneda || property.currency) ||
+		formatPrice(property.budget, property.moneda || property.currency) ||
 		(property.operations && property.operations.length > 0
 			? property.operations[0].formatted_amount ||
 				property.operations[0].formated_amount ||
-				`${property.operations[0].amount} ${property.operations[0].currency}`
+				`${Number(property.operations[0].amount).toLocaleString('es-MX')} ${property.operations[0].currency || 'MXN'}`
 			: 'Precio a consultar');
 
 	function getOperationType(type) {
+		if (!type) return null;
+		const t = String(type).toLowerCase().trim();
 		const types = {
 			sale: 'Venta',
+			venta: 'Venta',
+			rent: 'Renta',
 			rental: 'Renta',
-			temporary_rental: 'Renta Temporal'
+			renta: 'Renta',
+			temporary_rental: 'Renta Temporal',
+			'renta temporal': 'Renta Temporal'
 		};
-		return types[type] || type || 'Venta/Renta';
+		return types[t] || type;
 	}
 
 	$: type =
-		property.tipoOperacion ||
+		getOperationType(property.selecTO) ||
+		getOperationType(property.tipoOperacion) ||
+		getOperationType(property.operation_type) ||
 		(property.operations && property.operations.length > 0
 			? getOperationType(property.operations[0].type)
 			: 'Venta/Renta');
 
-	$: beds = property.recamaras || property.bedrooms || 0;
-	$: baths = property.banos || property.bathrooms || 0;
+	$: beds = property.recamaras ?? property.bedrooms ?? 0;
+	$: baths = property.banos ?? property.bathrooms ?? 0;
 	$: area =
-		property.construccion || property.terreno || property.construction_size || property.lot_size || 0;
+		property.construccion || property.construction_size || property.terreno || property.lot_size || 0;
 	$: features = property.amenidades || property.features || [];
 
 	// Navigation state fallback

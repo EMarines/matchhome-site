@@ -1,41 +1,54 @@
 import { error } from '@sveltejs/kit';
 import { serializeFirestoreData } from '$lib/utils/serializeFirestore';
 import inventoryData from '$lib/data/inventory.json';
+import { mockProperties } from '$lib/data/mockProperties';
 
 export async function load({ params, locals }) {
   const { id } = params;
   const db = locals.db;
 
-  const localProp = inventoryData.find(
-    (p) => p.public_id === id || p.easybroker_id === id || p.id === id || p.clavePropiedad === id
-  );
+  const localProp =
+    inventoryData.find(
+      (p) => p.public_id === id || p.easybroker_id === id || p.id === id || p.clavePropiedad === id
+    ) ||
+    mockProperties.find(
+      (p) => p.public_id === id || p.easybroker_id === id || p.id === id || p.clavePropiedad === id
+    );
 
   if (db) {
     try {
-      let doc = await db.collection('properties').doc(id).get();
-      if (!doc.exists) {
-        doc = await db.collection('easybroker_properties').doc(id).get();
+      const fields = ['public_id', 'easybroker_id', 'clavePropiedad', 'id'];
+      let doc = null;
+
+      // 1. Direct doc ID lookup in properties
+      const docRef = await db.collection('properties').doc(id).get();
+      if (docRef.exists) {
+        doc = docRef;
       }
-      if (!doc.exists) {
-        let q = await db.collection('properties').where('public_id', '==', id).limit(1).get();
-        if (q.empty) {
-          q = await db.collection('easybroker_properties').where('public_id', '==', id).limit(1).get();
-        }
-        if (q.empty) {
-          q = await db.collection('properties').where('easybroker_id', '==', id).limit(1).get();
-        }
-        if (!q.empty) {
-          doc = q.docs[0];
+
+      // 2. Search across fields in properties
+      if (!doc) {
+        for (const field of fields) {
+          const q = await db.collection('properties').where(field, '==', id).limit(1).get();
+          if (!q.empty) {
+            doc = q.docs[0];
+            break;
+          }
         }
       }
 
-      if (doc.exists) {
+      if (doc && doc.exists) {
         const firestoreData = doc.data();
         const mergedProperty = {
           ...(localProp || {}),
           ...firestoreData,
           id: doc.id,
-          description: firestoreData.description || firestoreData.descripcion || localProp?.description || localProp?.descripcion || null
+          description:
+            firestoreData.description ||
+            firestoreData.descripcion ||
+            localProp?.description ||
+            localProp?.descripcion ||
+            null
         };
         return {
           property: serializeFirestoreData(mergedProperty)
@@ -52,5 +65,6 @@ export async function load({ params, locals }) {
     };
   }
 
-  throw error(404, 'Propiedad no encontrada');
+  throw error(404, `Propiedad no encontrada (${id})`);
 }
+

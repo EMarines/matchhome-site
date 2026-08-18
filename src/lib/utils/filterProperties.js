@@ -8,7 +8,7 @@ export function filterProperties(inventoryData, search, filters, page = 1, limit
       ? [locationObj.name, locationObj.city, locationObj.region, locationObj.city_area].filter(Boolean).join(' ') 
       : (p.colonia || p.ubicacion || p.location || '');
     const location = locationName.toLowerCase();
-    const type = (p.tipoPropiedad || p.property_type || '').toLowerCase();
+    const type = (p.selecTP || p.tipoPropiedad || p.property_type || '').toLowerCase();
     const id = (p.easybroker_id || p.public_id || p.id || '').toLowerCase();
     const matchesText = !term || title.includes(term) || location.includes(term) || type.includes(term) || id.includes(term);
 
@@ -27,34 +27,46 @@ export function filterProperties(inventoryData, search, filters, page = 1, limit
     let matchesOperationType = false;
 
     const operations = p.operaciones || p.operations;
-    const priceVal = p.precio ?? (operations && operations[0] ? operations[0].amount : 0);
-    const opTypeVal = p.tipoOperacion || (operations && operations[0] ? operations[0].type : '');
+    const priceVal = p.price ?? p.precio ?? p.budget ?? (operations && operations[0] ? operations[0].amount : 0);
+
+    const getOpType = (val) => {
+      if (!val) return '';
+      const t = String(val).toLowerCase().trim();
+      if (t === 'sale' || t === 'venta') return 'venta';
+      if (t === 'rent' || t === 'rental' || t === 'renta') return 'renta';
+      return t;
+    };
+
+    const opTypeVal = getOpType(p.selecTO || p.tipoOperacion || p.operation_type || (operations && operations[0] ? operations[0].type : ''));
 
     if (operations && operations.length > 0) {
       if (filters.operationType) {
-        const op = operations.find(o => (o.type || '').toLowerCase() === filters.operationType.toLowerCase());
+        const targetOp = getOpType(filters.operationType);
+        const op = operations.find(o => getOpType(o.type) === targetOp);
         if (op) {
           matchesOperationType = true;
-          const price = op.amount || p.precio || 0;
+          const price = op.amount || p.price || p.precio || 0;
           matchesPrice = (price >= min && price <= max);
         }
       } else {
         matchesOperationType = true;
         matchesPrice = operations.some(op => {
-          const price = op.amount || p.precio || 0;
+          const price = op.amount || p.price || p.precio || 0;
           return price >= min && price <= max;
         });
       }
-    } else if (p.precio || p.tipoOperacion) {
-      matchesOperationType = !filters.operationType || (opTypeVal.toLowerCase().includes(filters.operationType.toLowerCase()));
-      matchesPrice = (priceVal >= min && priceVal <= max);
     } else {
-      matchesOperationType = !filters.operationType;
-      matchesPrice = !filters.minPrice && !filters.maxPrice;
+      if (filters.operationType) {
+        const targetOp = getOpType(filters.operationType);
+        matchesOperationType = (opTypeVal === targetOp || opTypeVal.includes(targetOp));
+      } else {
+        matchesOperationType = true;
+      }
+      matchesPrice = (priceVal >= min && priceVal <= max);
     }
 
     // Property Type Filter (Case Insensitive)
-    const propTypeStr = p.tipoPropiedad || p.property_type || '';
+    const propTypeStr = p.selecTP || p.tipoPropiedad || p.property_type || '';
     const matchesPropertyType = !filters.propertyType || 
       (propTypeStr && propTypeStr.toLowerCase().includes(filters.propertyType.toLowerCase()));
 
