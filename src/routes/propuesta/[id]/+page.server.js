@@ -6,10 +6,34 @@ import { mockProperties } from '$lib/data/mockProperties';
 export async function load({ params, url, locals }) {
   const { id } = params;
   const db = locals.db;
-  const clientName = url.searchParams.get('cliente') || 'Cliente';
+  const contactId = url.searchParams.get('c');
+  let clientName = url.searchParams.get('cliente') || 'Cliente';
   const targetBudget = parseFloat(url.searchParams.get('presupuesto'));
+  let contact = null;
 
-  console.log(`[propuesta load] ID: "${id}", db available: ${Boolean(db)}`);
+  console.log(`[propuesta load] ID: "${id}", db available: ${Boolean(db)}, contactId: "${contactId || ''}"`);
+
+  if (contactId && db) {
+    try {
+      const contactDoc = await db.collection('contacts').doc(contactId).get();
+      if (contactDoc.exists) {
+        const cData = contactDoc.data();
+        contact = { id: contactDoc.id, ...cData };
+        const fetchedName =
+          cData.name ||
+          cData.nombre ||
+          cData.fullName ||
+          cData.nombreCompleto ||
+          (cData.firstName ? `${cData.firstName} ${cData.lastName || ''}`.trim() : null) ||
+          cData.first_name;
+        if (fetchedName) {
+          clientName = fetchedName;
+        }
+      }
+    } catch (e) {
+      console.error('Error loading contact from Firestore on server:', e);
+    }
+  }
 
   let anchorProperty = null;
   let allPropertiesPool = [];
@@ -134,6 +158,8 @@ export async function load({ params, url, locals }) {
   return {
     anchorProperty: serializeFirestoreData(anchorProperty),
     similarProperties: serializeFirestoreData(similarProperties),
-    clientName
+    clientName,
+    contact: serializeFirestoreData(contact),
+    contactId
   };
 }

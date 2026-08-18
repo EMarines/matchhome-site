@@ -1,9 +1,80 @@
 <script>
+	import { onMount } from 'svelte';
 	import PropertyCard from '$lib/components/PropertyCard.svelte';
 	import { page } from '$app/stores';
+	import { db as clientDb } from '$lib/firebase-client';
+	import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 	export let data;
-	$: ({ anchorProperty, similarProperties, clientName } = data);
+	$: ({ anchorProperty, similarProperties, clientName, contact: serverContact, contactId: serverContactId } = data);
+
+	let loadedContact = null;
+	let contactLoading = false;
+	let contactError = null;
+	let formSubmitted = false;
+
+	$: contactId = serverContactId || $page.url.searchParams.get('c');
+	$: contact = loadedContact || serverContact;
+
+	function extractContactName(c, fallback) {
+		if (!c) return fallback || 'Cliente';
+		return (
+			c.name ||
+			c.nombre ||
+			c.fullName ||
+			c.nombreCompleto ||
+			(c.firstName ? `${c.firstName} ${c.lastName || ''}`.trim() : null) ||
+			c.first_name ||
+			fallback ||
+			'Cliente'
+		);
+	}
+
+	function extractContactEmail(c) {
+		if (!c) return '';
+		return c.email || c.correo || c.mail || c.emailAddress || '';
+	}
+
+	function extractContactPhone(c) {
+		if (!c) return '';
+		return c.phone || c.telefono || c.celular || c.mobile || c.phone_number || '';
+	}
+
+	$: displayName = extractContactName(contact, clientName);
+	$: formName = extractContactName(contact, '');
+	$: formEmail = extractContactEmail(contact);
+	$: formPhone = extractContactPhone(contact);
+	let userMessage = '';
+
+	onMount(async () => {
+		if (contactId && !contact) {
+			contactLoading = true;
+			try {
+				const contactRef = doc(clientDb, 'contacts', contactId);
+				const snap = await getDoc(contactRef);
+				if (snap.exists()) {
+					loadedContact = { id: snap.id, ...snap.data() };
+				}
+			} catch (err) {
+				console.error('Error fetching contact on client:', err);
+				contactError = err;
+			} finally {
+				contactLoading = false;
+			}
+		}
+
+		if (contactId) {
+			try {
+				const contactRef = doc(clientDb, 'contacts', contactId);
+				await updateDoc(contactRef, {
+					lastProposalViewedAt: serverTimestamp(),
+					lastProposalPropertyId: anchorProperty?.public_id || anchorProperty?.id || null
+				});
+			} catch (err) {
+				console.log('[Telemetry note] View registration:', err.message);
+			}
+		}
+	});
 
 	const NO_IMAGE_PLACEHOLDER =
 		'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22400%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A20pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22400%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22130%22%20y%3D%22158%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
@@ -41,10 +112,14 @@
 		anchorProperty.public_id || anchorProperty.easybroker_id || anchorProperty.id;
 
 	$: locationPath = $page.url.pathname + $page.url.search;
+
+	function handleFormSubmit() {
+		formSubmitted = true;
+	}
 </script>
 
 <svelte:head>
-	<title>Propuesta para {clientName} - MatchHome</title>
+	<title>Propuesta para {displayName} - MatchHome</title>
 </svelte:head>
 
 <div class="proposal-page">
@@ -52,8 +127,16 @@
 	<header class="proposal-header">
 		<div class="container">
 			<div class="greeting-content">
-				<h1>Hola, <span class="highlight">{clientName}</span></h1>
-				<p class="subtitle">Preparamos esta selección exclusiva basada en tu interés.</p>
+				{#if contact}
+					<div class="proposal-badge">
+						✨ Propuesta Personalizada
+					</div>
+					<h1>¡Hola, <span class="highlight">{displayName}</span>!</h1>
+					<p class="subtitle">Te preparamos esta propuesta especial basada en tus preferencias.</p>
+				{:else}
+					<h1>Hola, <span class="highlight">{displayName}</span></h1>
+					<p class="subtitle">Preparamos esta selección exclusiva basada en tu interés.</p>
+				{/if}
 			</div>
 		</div>
 	</header>
@@ -103,7 +186,73 @@
 			</div>
 		</section>
 
-		<!-- Section 2: Similar Properties -->
+		<!-- Section 2: Contact / Schedule Visit Section -->
+		<section class="contact-section">
+			<div class="contact-card">
+				<div class="contact-header">
+					<h2>¿Te interesa agendar una visita o solicitar más información?</h2>
+					<p>Déjanos tus datos y un asesor se pondrá en contacto contigo a la brevedad.</p>
+				</div>
+
+				{#if formSubmitted}
+					<div class="success-alert">
+						✅ ¡Gracias {displayName || 'por comunicarte'}! Hemos recibido tu mensaje. Te contactaremos pronto.
+					</div>
+				{:else}
+					<form class="proposal-contact-form" on:submit|preventDefault={handleFormSubmit}>
+						<div class="form-row">
+							<div class="form-group">
+								<label for="name">Nombre</label>
+								<input
+									id="name"
+									type="text"
+									bind:value={formName}
+									placeholder="Tu nombre completo"
+									required
+									class="form-input"
+								/>
+							</div>
+							<div class="form-group">
+								<label for="email">Correo Electrónico</label>
+								<input
+									id="email"
+									type="email"
+									bind:value={formEmail}
+									placeholder="correo@ejemplo.com"
+									required
+									class="form-input"
+								/>
+							</div>
+							<div class="form-group">
+								<label for="phone">Teléfono / WhatsApp</label>
+								<input
+									id="phone"
+									type="tel"
+									bind:value={formPhone}
+									placeholder="(55) 1234 5678"
+									class="form-input"
+								/>
+							</div>
+						</div>
+						<div class="form-group">
+							<label for="message">Mensaje / Horario de Preferencia</label>
+							<textarea
+								id="message"
+								bind:value={userMessage}
+								placeholder="Hola, me interesa agendar una cita para ver esta propiedad..."
+								rows="3"
+								class="form-input"
+							></textarea>
+						</div>
+						<button type="submit" class="btn btn-primary submit-btn">
+							📅 Solicitar Información / Agendar Cita
+						</button>
+					</form>
+				{/if}
+			</div>
+		</section>
+
+		<!-- Section 3: Similar Properties -->
 		{#if similarProperties.length > 0}
 			<section class="similar-section">
 				<div class="section-header">
@@ -115,10 +264,6 @@
 				<div class="properties-grid">
 					{#each similarProperties as property (property.public_id)}
 						<PropertyCard {property} backUrl={locationPath} fromProposal={true} />
-						<!-- Note: PropertyCard needs to handle backUrl/fromProposal if we want to pass it through. 
-                 Currently PropertyCard links to /property/[id] directly. 
-                 To support backUrl, we might need to update PropertyCard or just accept standard navigation.
-                 For now, standard navigation. -->
 					{/each}
 				</div>
 			</section>
@@ -139,6 +284,18 @@
 		padding: 4rem 0 6rem;
 		margin-bottom: -3rem;
 		text-align: center;
+	}
+
+	.proposal-badge {
+		display: inline-block;
+		background: rgba(255, 255, 255, 0.2);
+		backdrop-filter: blur(8px);
+		padding: 0.35rem 1rem;
+		border-radius: 20px;
+		font-size: 0.9rem;
+		font-weight: 600;
+		margin-bottom: 1rem;
+		border: 1px solid rgba(255, 255, 255, 0.3);
 	}
 
 	.greeting-content h1 {
@@ -169,6 +326,93 @@
 		display: grid;
 		grid-template-columns: 1.2fr 1fr;
 		gap: 0;
+	}
+
+	.contact-section {
+		margin-bottom: 4rem;
+	}
+
+	.contact-card {
+		background: white;
+		border-radius: 16px;
+		padding: 2.5rem;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+	}
+
+	.contact-header {
+		text-align: center;
+		margin-bottom: 2rem;
+	}
+
+	.contact-header h2 {
+		font-size: 1.6rem;
+		color: var(--color-primary);
+		margin-bottom: 0.5rem;
+	}
+
+	.contact-header p {
+		color: #666;
+		font-size: 1rem;
+	}
+
+	.proposal-contact-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+	}
+
+	.form-row {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+		gap: 1.25rem;
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.form-group label {
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--color-text-main);
+	}
+
+	.form-input {
+		width: 100%;
+		padding: 0.8rem 1rem;
+		border: 1px solid #ddd;
+		border-radius: 8px;
+		font-family: inherit;
+		font-size: 0.95rem;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	}
+
+	.form-input:focus {
+		outline: none;
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 10, 40, 90), 0.1);
+	}
+
+	.submit-btn {
+		margin-top: 0.5rem;
+		padding: 0.9rem 1.5rem;
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+		align-self: center;
+	}
+
+	.success-alert {
+		background-color: #d4edda;
+		color: #155724;
+		border: 1px solid #c3e6cb;
+		padding: 1.25rem;
+		border-radius: 8px;
+		text-align: center;
+		font-weight: 500;
+		font-size: 1.1rem;
 	}
 
 	@media (max-width: 768px) {
@@ -204,6 +448,9 @@
 		.properties-grid {
 			grid-template-columns: minmax(0, 1fr);
 			gap: 1.25rem;
+		}
+		.contact-card {
+			padding: 1.5rem;
 		}
 	}
 
@@ -300,3 +547,4 @@
 		display: block;
 	}
 </style>
+
