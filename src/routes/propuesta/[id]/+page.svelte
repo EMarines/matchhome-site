@@ -79,21 +79,98 @@
 	const NO_IMAGE_PLACEHOLDER =
 		'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22400%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A20pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22400%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22130%22%20y%3D%22158%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
 
-	// Helper for Anchor Property Display
-	$: anchorImage =
-		anchorProperty.imagenPrincipal ||
-		anchorProperty.imagenMiniatura ||
-		anchorProperty.title_image_full ||
-		anchorProperty.title_image_thumb ||
-		(anchorProperty.images && anchorProperty.images.length > 0
-			? typeof anchorProperty.images[0] === 'string'
-				? anchorProperty.images[0]
-				: anchorProperty.images[0]?.url
-			: null) ||
-		(anchorProperty.property_images &&
-			anchorProperty.property_images.length > 0 &&
-			anchorProperty.property_images[0]?.url) ||
-		NO_IMAGE_PLACEHOLDER;
+	// Helper for Anchor Property Images Gallery
+	function extractImages(p) {
+		if (!p) return [NO_IMAGE_PLACEHOLDER];
+		let list = [];
+		if (Array.isArray(p.images) && p.images.length > 0) {
+			list = p.images;
+		} else if (Array.isArray(p.property_images) && p.property_images.length > 0) {
+			list = p.property_images;
+		} else if (Array.isArray(p.photos) && p.photos.length > 0) {
+			list = p.photos;
+		} else if (Array.isArray(p.fotos) && p.fotos.length > 0) {
+			list = p.fotos;
+		} else if (Array.isArray(p.imagenes) && p.imagenes.length > 0) {
+			list = p.imagenes;
+		}
+
+		const parsed = list
+			.map((img) => (typeof img === 'string' ? img : img?.url || img?.src || img?.link || null))
+			.filter(Boolean);
+
+		if (parsed.length > 0) {
+			return Array.from(new Set(parsed));
+		}
+
+		const single =
+			p.imagenPrincipal ||
+			p.imagenMiniatura ||
+			p.title_image_full ||
+			p.title_image_thumb ||
+			p.image ||
+			p.cover_image;
+
+		return single ? [single] : [NO_IMAGE_PLACEHOLDER];
+	}
+
+	$: anchorImages = extractImages(anchorProperty);
+	let currentAnchorImageIndex = 0;
+	let lastAnchorId = null;
+
+	$: {
+		const currId = anchorProperty?.public_id || anchorProperty?.easybroker_id || anchorProperty?.id;
+		if (currId && currId !== lastAnchorId) {
+			lastAnchorId = currId;
+			currentAnchorImageIndex = 0;
+		}
+	}
+
+	$: currentAnchorImage = anchorImages[currentAnchorImageIndex] || anchorImages[0] || NO_IMAGE_PLACEHOLDER;
+
+	function nextAnchorImage(e) {
+		if (e) e.stopPropagation();
+		if (anchorImages.length > 1) {
+			currentAnchorImageIndex = (currentAnchorImageIndex + 1) % anchorImages.length;
+		}
+	}
+
+	function prevAnchorImage(e) {
+		if (e) e.stopPropagation();
+		if (anchorImages.length > 1) {
+			currentAnchorImageIndex =
+				(currentAnchorImageIndex - 1 + anchorImages.length) % anchorImages.length;
+		}
+	}
+
+	function selectAnchorImage(idx, e) {
+		if (e) e.stopPropagation();
+		currentAnchorImageIndex = idx;
+	}
+
+	// Touch swipe gestures for mobile carousel
+	let touchStartX = 0;
+	let touchEndX = 0;
+
+	function handleTouchStart(e) {
+		if (e.changedTouches && e.changedTouches.length > 0) {
+			touchStartX = e.changedTouches[0].screenX;
+		}
+	}
+
+	function handleTouchEnd(e) {
+		if (e.changedTouches && e.changedTouches.length > 0) {
+			touchEndX = e.changedTouches[0].screenX;
+			const diff = touchEndX - touchStartX;
+			if (Math.abs(diff) > 40) {
+				if (diff < 0) {
+					nextAnchorImage();
+				} else {
+					prevAnchorImage();
+				}
+			}
+		}
+	}
 
 	$: anchorPrice =
 		anchorProperty.precioFormateado ||
@@ -126,9 +203,9 @@
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content={anchorProperty?.title || `Propuesta para ${displayName} - MatchHome`} />
 	<meta property="og:description" content={anchorProperty?.description ? anchorProperty.description.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim().substring(0, 200) + '...' : `Propuesta personalizada de propiedades en MatchHome para ${displayName}`} />
-	{#if anchorImage && anchorImage !== NO_IMAGE_PLACEHOLDER}
-		<meta property="og:image" content={anchorImage} />
-		<meta property="og:image:secure_url" content={anchorImage} />
+	{#if anchorImages[0] && anchorImages[0] !== NO_IMAGE_PLACEHOLDER}
+		<meta property="og:image" content={anchorImages[0]} />
+		<meta property="og:image:secure_url" content={anchorImages[0]} />
 	{/if}
 	<meta property="og:site_name" content="MatchHome" />
 
@@ -136,8 +213,8 @@
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content={anchorProperty?.title || `Propuesta para ${displayName}`} />
 	<meta name="twitter:description" content={anchorProperty?.description ? anchorProperty.description.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim().substring(0, 200) : `Propuesta inmobiliaria personalizada`} />
-	{#if anchorImage && anchorImage !== NO_IMAGE_PLACEHOLDER}
-		<meta name="twitter:image" content={anchorImage} />
+	{#if anchorImages[0] && anchorImages[0] !== NO_IMAGE_PLACEHOLDER}
+		<meta name="twitter:image" content={anchorImages[0]} />
 	{/if}
 </svelte:head>
 
@@ -169,10 +246,58 @@
 			</div>
 
 			<div class="anchor-card">
-				<div class="anchor-image-container">
-					<img src={anchorImage} alt={anchorProperty.title} class="anchor-image" />
+				<div
+					class="anchor-image-container"
+					on:touchstart={handleTouchStart}
+					on:touchend={handleTouchEnd}
+				>
+					<img
+						src={currentAnchorImage}
+						alt={anchorProperty.title || 'Propiedad'}
+						class="anchor-image"
+						on:error={(e) => {
+							e.currentTarget.src = NO_IMAGE_PLACEHOLDER;
+						}}
+					/>
+
+					{#if anchorImages.length > 1}
+						<button
+							type="button"
+							class="carousel-nav-btn prev-btn"
+							on:click={prevAnchorImage}
+							aria-label="Imagen anterior"
+						>
+							&#10094;
+						</button>
+						<button
+							type="button"
+							class="carousel-nav-btn next-btn"
+							on:click={nextAnchorImage}
+							aria-label="Imagen siguiente"
+						>
+							&#10095;
+						</button>
+						<div class="image-indicator">
+							{currentAnchorImageIndex + 1} / {anchorImages.length}
+						</div>
+
+						{#if anchorImages.length <= 10}
+							<div class="carousel-dots">
+								{#each anchorImages as _, i}
+									<button
+										type="button"
+										class="dot-btn {i === currentAnchorImageIndex ? 'active' : ''}"
+										on:click={(e) => selectAnchorImage(i, e)}
+										aria-label="Ir a foto {i + 1}"
+									></button>
+								{/each}
+							</div>
+						{/if}
+					{/if}
+
 					<div class="anchor-price-tag">{anchorPrice}</div>
 				</div>
+
 				<div class="anchor-details">
 					<h3>{anchorProperty.title}</h3>
 					<p class="anchor-location">
@@ -193,12 +318,34 @@
 							: 'Sin descripción.'}
 					</p>
 
+					{#if anchorImages.length > 1}
+						<div class="anchor-thumbnails-strip">
+							{#each anchorImages as thumbUrl, i}
+								<button
+									type="button"
+									class="anchor-thumb-btn {i === currentAnchorImageIndex ? 'active' : ''}"
+									on:click={(e) => selectAnchorImage(i, e)}
+									aria-label="Ver imagen {i + 1}"
+								>
+									<img
+										src={thumbUrl}
+										alt=""
+										class="anchor-thumb-img"
+										on:error={(e) => {
+											e.currentTarget.src = NO_IMAGE_PLACEHOLDER;
+										}}
+									/>
+								</button>
+							{/each}
+						</div>
+					{/if}
+
 					<div class="anchor-actions">
 						<a
 							href={`/property/${anchorPublicId}?backUrl=${encodeURIComponent(locationPath)}&fromProposal=true`}
 							class="btn btn-secondary full-width"
 						>
-							Ver Detalles
+							Ver Detalles y Más Fotos
 						</a>
 					</div>
 				</div>
@@ -476,13 +623,155 @@
 	.anchor-image-container {
 		position: relative;
 		height: 100%;
-		min-height: 300px;
+		min-height: 340px;
+		background: #1a1a1a;
+		overflow: hidden;
+		user-select: none;
 	}
 
 	.anchor-image {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		display: block;
+		transition: opacity 0.2s ease-in-out;
+	}
+
+	.carousel-nav-btn {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		background: rgba(0, 0, 0, 0.55);
+		color: white;
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		width: 44px;
+		height: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		font-size: 1.4rem;
+		border-radius: 50%;
+		transition: background 0.2s ease, transform 0.2s ease;
+		z-index: 10;
+		backdrop-filter: blur(4px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		user-select: none;
+	}
+
+	.carousel-nav-btn:hover {
+		background: rgba(0, 0, 0, 0.85);
+		transform: translateY(-50%) scale(1.08);
+	}
+
+	.carousel-nav-btn.prev-btn {
+		left: 14px;
+	}
+
+	.carousel-nav-btn.next-btn {
+		right: 14px;
+	}
+
+	.image-indicator {
+		position: absolute;
+		bottom: 16px;
+		right: 16px;
+		background: rgba(0, 0, 0, 0.7);
+		color: white;
+		padding: 4px 12px;
+		border-radius: 20px;
+		font-size: 0.85rem;
+		font-weight: 600;
+		z-index: 10;
+		backdrop-filter: blur(6px);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.carousel-dots {
+		position: absolute;
+		bottom: 16px;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		z-index: 10;
+		background: rgba(0, 0, 0, 0.45);
+		padding: 5px 10px;
+		border-radius: 20px;
+		backdrop-filter: blur(6px);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+	}
+
+	.dot-btn {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		border: none;
+		background: rgba(255, 255, 255, 0.5);
+		padding: 0;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.dot-btn:hover {
+		background: rgba(255, 255, 255, 0.8);
+	}
+
+	.dot-btn.active {
+		background: #fff;
+		width: 20px;
+		border-radius: 4px;
+	}
+
+	.anchor-thumbnails-strip {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 1.5rem;
+		overflow-x: auto;
+		padding-bottom: 8px;
+		scrollbar-width: thin;
+		scrollbar-color: #ccc transparent;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.anchor-thumbnails-strip::-webkit-scrollbar {
+		height: 4px;
+	}
+
+	.anchor-thumbnails-strip::-webkit-scrollbar-thumb {
+		background: #ccc;
+		border-radius: 4px;
+	}
+
+	.anchor-thumb-btn {
+		width: 56px;
+		height: 44px;
+		border-radius: 6px;
+		overflow: hidden;
+		border: 2px solid transparent;
+		padding: 0;
+		cursor: pointer;
+		background: #eee;
+		transition: border-color 0.2s, transform 0.2s;
+		flex-shrink: 0;
+	}
+
+	.anchor-thumb-btn:hover {
+		transform: scale(1.05);
+	}
+
+	.anchor-thumb-btn.active {
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb, 10, 40, 90), 0.3);
+	}
+
+	.anchor-thumb-img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
 	}
 
 	.anchor-price-tag {
@@ -500,6 +789,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		z-index: 5;
 	}
 
 	.anchor-details {
