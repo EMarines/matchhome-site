@@ -172,6 +172,36 @@
 		}
 	}
 
+	// Fullscreen lightbox state and handlers
+	let isFullscreen = false;
+
+	function openFullscreen(e) {
+		if (e) e.stopPropagation();
+		isFullscreen = true;
+		if (typeof document !== 'undefined') {
+			document.body.style.overflow = 'hidden';
+		}
+	}
+
+	function closeFullscreen(e) {
+		if (e) e.stopPropagation();
+		isFullscreen = false;
+		if (typeof document !== 'undefined') {
+			document.body.style.overflow = '';
+		}
+	}
+
+	function handleKeydown(e) {
+		if (!isFullscreen) return;
+		if (e.key === 'Escape') {
+			closeFullscreen();
+		} else if (e.key === 'ArrowRight') {
+			nextAnchorImage();
+		} else if (e.key === 'ArrowLeft') {
+			prevAnchorImage();
+		}
+	}
+
 	$: anchorPrice =
 		anchorProperty.precioFormateado ||
 		(anchorProperty.precio
@@ -194,6 +224,8 @@
 		formSubmitted = true;
 	}
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <svelte:head>
 	<title>{anchorProperty?.title ? `${anchorProperty.title} - Propuesta MatchHome` : `Propuesta para ${displayName} - MatchHome`}</title>
@@ -246,77 +278,71 @@
 			</div>
 
 			<div class="anchor-card">
-				<div
-					class="anchor-image-container"
-					on:touchstart={handleTouchStart}
-					on:touchend={handleTouchEnd}
-				>
-					<img
-						src={currentAnchorImage}
-						alt={anchorProperty.title || 'Propiedad'}
-						class="anchor-image"
-						on:error={(e) => {
-							e.currentTarget.src = NO_IMAGE_PLACEHOLDER;
-						}}
-					/>
+				<div class="anchor-gallery">
+					<div
+						class="anchor-image-container"
+						on:touchstart={handleTouchStart}
+						on:touchend={handleTouchEnd}
+					>
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+						<img
+							src={currentAnchorImage}
+							alt={anchorProperty.title || 'Propiedad'}
+							class="anchor-image clickable"
+							on:click={openFullscreen}
+							on:error={(e) => {
+								e.currentTarget.src = NO_IMAGE_PLACEHOLDER;
+							}}
+						/>
 
-					{#if anchorImages.length > 1}
 						<button
 							type="button"
-							class="carousel-nav-btn prev-btn"
-							on:click={prevAnchorImage}
-							aria-label="Imagen anterior"
+							class="carousel-nav-btn fullscreen-btn"
+							on:click={openFullscreen}
+							aria-label="Ver imagen en pantalla completa"
+							title="Pantalla completa"
 						>
-							&#10094;
+							<svg
+								viewBox="0 0 24 24"
+								width="20"
+								height="20"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2.2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path
+									d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"
+								/>
+							</svg>
 						</button>
-						<button
-							type="button"
-							class="carousel-nav-btn next-btn"
-							on:click={nextAnchorImage}
-							aria-label="Imagen siguiente"
-						>
-							&#10095;
-						</button>
-						<div class="image-indicator">
-							{currentAnchorImageIndex + 1} / {anchorImages.length}
-						</div>
 
-						{#if anchorImages.length <= 10}
-							<div class="carousel-dots">
-								{#each anchorImages as _, i}
-									<button
-										type="button"
-										class="dot-btn {i === currentAnchorImageIndex ? 'active' : ''}"
-										on:click={(e) => selectAnchorImage(i, e)}
-										aria-label="Ir a foto {i + 1}"
-									></button>
-								{/each}
+						{#if anchorImages.length > 1}
+							<button
+								type="button"
+								class="carousel-nav-btn prev-btn"
+								on:click={prevAnchorImage}
+								aria-label="Imagen anterior"
+							>
+								&#10094;
+							</button>
+							<button
+								type="button"
+								class="carousel-nav-btn next-btn"
+								on:click={nextAnchorImage}
+								aria-label="Imagen siguiente"
+							>
+								&#10095;
+							</button>
+							<div class="image-indicator">
+								{currentAnchorImageIndex + 1} / {anchorImages.length}
 							</div>
 						{/if}
-					{/if}
 
-					<div class="anchor-price-tag">{anchorPrice}</div>
-				</div>
-
-				<div class="anchor-details">
-					<h3>{anchorProperty.title}</h3>
-					<p class="anchor-location">
-						📍 {typeof anchorProperty.location === 'object'
-							? anchorProperty.location.name
-							: anchorProperty.location}
-					</p>
-
-					<div class="anchor-features">
-						<span>🛏 {anchorProperty.bedrooms} Recámaras</span>
-						<span>🚿 {anchorProperty.bathrooms} Baños</span>
-						<span>📐 {anchorProperty.construction_size || anchorProperty.lot_size} m²</span>
+						<div class="anchor-price-tag">{anchorPrice}</div>
 					</div>
-
-					<p class="anchor-description">
-						{anchorProperty.description
-							? anchorProperty.description.substring(0, 200) + '...'
-							: 'Sin descripción.'}
-					</p>
 
 					{#if anchorImages.length > 1}
 						<div class="anchor-thumbnails-strip">
@@ -339,6 +365,27 @@
 							{/each}
 						</div>
 					{/if}
+				</div>
+
+				<div class="anchor-details">
+					<h3>{anchorProperty.title}</h3>
+					<p class="anchor-location">
+						📍 {typeof anchorProperty.location === 'object'
+							? anchorProperty.location.name
+							: anchorProperty.location}
+					</p>
+
+					<div class="anchor-features">
+						<span>🛏 {anchorProperty.bedrooms} Recámaras</span>
+						<span>🚿 {anchorProperty.bathrooms} Baños</span>
+						<span>📐 {anchorProperty.construction_size || anchorProperty.lot_size} m²</span>
+					</div>
+
+					<p class="anchor-description">
+						{anchorProperty.description
+							? anchorProperty.description.substring(0, 240) + '...'
+							: 'Sin descripción.'}
+					</p>
 
 					<div class="anchor-actions">
 						<a
@@ -435,6 +482,70 @@
 			</section>
 		{/if}
 	</div>
+
+	{#if isFullscreen}
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+		<div
+			class="fullscreen-modal"
+			on:click={closeFullscreen}
+			role="dialog"
+			aria-modal="true"
+			aria-label="Vista de pantalla completa"
+		>
+			<button
+				type="button"
+				class="fullscreen-modal-btn close-btn"
+				on:click={closeFullscreen}
+				aria-label="Cerrar pantalla completa"
+				title="Cerrar (Esc)"
+			>
+				✕
+			</button>
+
+			{#if anchorImages.length > 1}
+				<button
+					type="button"
+					class="fullscreen-modal-btn modal-prev-btn"
+					on:click={prevAnchorImage}
+					aria-label="Imagen anterior"
+					title="Anterior (Flecha Izq)"
+				>
+					&#10094;
+				</button>
+				<button
+					type="button"
+					class="fullscreen-modal-btn modal-next-btn"
+					on:click={nextAnchorImage}
+					aria-label="Imagen siguiente"
+					title="Siguiente (Flecha Der)"
+				>
+					&#10095;
+				</button>
+				<div class="fullscreen-counter">
+					{currentAnchorImageIndex + 1} / {anchorImages.length}
+				</div>
+			{/if}
+
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<div
+				class="fullscreen-image-wrapper"
+				on:click|stopPropagation
+				on:touchstart={handleTouchStart}
+				on:touchend={handleTouchEnd}
+			>
+				<img
+					src={currentAnchorImage}
+					alt={anchorProperty.title || 'Propiedad'}
+					class="fullscreen-img"
+					on:error={(e) => {
+						e.currentTarget.src = NO_IMAGE_PLACEHOLDER;
+					}}
+				/>
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -491,7 +602,15 @@
 		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 		display: grid;
 		grid-template-columns: 1.2fr 1fr;
-		gap: 0;
+		gap: 2rem;
+		padding: 1.5rem;
+	}
+
+	.anchor-gallery {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		min-width: 0;
 	}
 
 	.contact-section {
@@ -590,9 +709,11 @@
 		}
 		.anchor-card {
 			grid-template-columns: 1fr;
+			gap: 1.25rem;
+			padding: 1rem;
 		}
 		.anchor-image-container {
-			min-height: 240px;
+			height: 260px;
 		}
 		.anchor-price-tag {
 			font-size: 1rem;
@@ -601,7 +722,7 @@
 			left: 12px;
 		}
 		.anchor-details {
-			padding: 1.25rem;
+			padding: 0.5rem;
 		}
 		.anchor-details h3 {
 			font-size: 1.35rem;
@@ -622,9 +743,10 @@
 
 	.anchor-image-container {
 		position: relative;
-		height: 100%;
-		min-height: 340px;
+		width: 100%;
+		height: 380px;
 		background: #1a1a1a;
+		border-radius: 12px;
 		overflow: hidden;
 		user-select: none;
 	}
@@ -687,50 +809,14 @@
 		border: 1px solid rgba(255, 255, 255, 0.2);
 	}
 
-	.carousel-dots {
-		position: absolute;
-		bottom: 16px;
-		left: 50%;
-		transform: translateX(-50%);
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		z-index: 10;
-		background: rgba(0, 0, 0, 0.45);
-		padding: 5px 10px;
-		border-radius: 20px;
-		backdrop-filter: blur(6px);
-		border: 1px solid rgba(255, 255, 255, 0.15);
-	}
-
-	.dot-btn {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		border: none;
-		background: rgba(255, 255, 255, 0.5);
-		padding: 0;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.dot-btn:hover {
-		background: rgba(255, 255, 255, 0.8);
-	}
-
-	.dot-btn.active {
-		background: #fff;
-		width: 20px;
-		border-radius: 4px;
-	}
-
 	.anchor-thumbnails-strip {
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		margin-bottom: 1.5rem;
+		margin-top: 4px;
+		margin-bottom: 0;
 		overflow-x: auto;
-		padding-bottom: 8px;
+		padding-bottom: 6px;
 		scrollbar-width: thin;
 		scrollbar-color: #ccc transparent;
 		-webkit-overflow-scrolling: touch;
@@ -854,6 +940,160 @@
 		width: 100%;
 		text-align: center;
 		display: block;
+	}
+
+	.anchor-image.clickable {
+		cursor: zoom-in;
+	}
+
+	.carousel-nav-btn.fullscreen-btn {
+		top: 20px;
+		right: 20px;
+		transform: none;
+		font-size: 1rem;
+		background: rgba(0, 0, 0, 0.55);
+	}
+
+	.carousel-nav-btn.fullscreen-btn:hover {
+		transform: scale(1.08);
+		background: rgba(0, 0, 0, 0.85);
+	}
+
+	/* Fullscreen Lightbox Modal */
+	.fullscreen-modal {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.94);
+		backdrop-filter: blur(10px);
+		z-index: 99999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 20px;
+		animation: fadeIn 0.2s ease-out;
+		user-select: none;
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	.fullscreen-modal-btn {
+		position: absolute;
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		background: rgba(0, 0, 0, 0.65);
+		color: white;
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		font-size: 1.5rem;
+		backdrop-filter: blur(6px);
+		transition: background 0.2s ease, transform 0.2s ease;
+		z-index: 100001;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+		user-select: none;
+		padding: 0;
+	}
+
+	.fullscreen-modal-btn:hover {
+		background: rgba(0, 0, 0, 0.9);
+		transform: scale(1.1);
+	}
+
+	.close-btn {
+		top: 20px;
+		right: 20px;
+		font-size: 1.25rem;
+	}
+
+	.modal-prev-btn {
+		top: 50%;
+		left: 20px;
+		transform: translateY(-50%);
+	}
+
+	.modal-prev-btn:hover {
+		transform: translateY(-50%) scale(1.1);
+	}
+
+	.modal-next-btn {
+		top: 50%;
+		right: 20px;
+		transform: translateY(-50%);
+	}
+
+	.modal-next-btn:hover {
+		transform: translateY(-50%) scale(1.1);
+	}
+
+	.fullscreen-counter {
+		position: absolute;
+		bottom: 24px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: rgba(0, 0, 0, 0.7);
+		color: white;
+		padding: 6px 16px;
+		border-radius: 20px;
+		font-size: 0.95rem;
+		font-weight: 600;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		backdrop-filter: blur(6px);
+		z-index: 100001;
+	}
+
+	.fullscreen-image-wrapper {
+		max-width: 92vw;
+		max-height: 88vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.fullscreen-img {
+		max-width: 100%;
+		max-height: 88vh;
+		object-fit: contain;
+		border-radius: 8px;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+		user-select: none;
+	}
+
+	@media (max-width: 768px) {
+		.carousel-nav-btn.fullscreen-btn {
+			top: 12px;
+			right: 12px;
+			width: 38px;
+			height: 38px;
+		}
+		.fullscreen-modal-btn {
+			width: 40px;
+			height: 40px;
+			font-size: 1.2rem;
+		}
+		.modal-prev-btn {
+			left: 10px;
+		}
+		.modal-next-btn {
+			right: 10px;
+		}
+		.close-btn {
+			top: 14px;
+			right: 14px;
+		}
+		.fullscreen-counter {
+			bottom: 16px;
+			font-size: 0.85rem;
+		}
 	}
 </style>
 
