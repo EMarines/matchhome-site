@@ -129,6 +129,50 @@
 			prevImage();
 		}
 	}
+
+	// Contact Form state & submission
+	let contactName = '';
+	let contactEmail = '';
+	let contactPhone = '';
+	let contactMessage = '';
+	let submittingForm = false;
+	let formSubmitted = false;
+	let formError = null;
+
+	async function handleContactSubmit() {
+		submittingForm = true;
+		formError = null;
+
+		try {
+			const res = await fetch('/api/contact', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					name: contactName || 'Cliente',
+					email: contactEmail,
+					phone: contactPhone,
+					message: contactMessage,
+					propertyId: property?.public_id || property?.easybroker_id || property?.id,
+					propertyTitle: title,
+					pageUrl: typeof window !== 'undefined' ? window.location.href : null
+				})
+			});
+
+			const result = await res.json();
+			if (res.ok && result.success) {
+				formSubmitted = true;
+			} else {
+				formError = result.error || 'Ocurrió un error al enviar tu mensaje.';
+			}
+		} catch (err) {
+			console.error('Error enviando contacto:', err);
+			formError = 'No se pudo conectar con el servidor.';
+		} finally {
+			submittingForm = false;
+		}
+	}
 	function extractDescription(p) {
 		if (!p) return 'Sin descripción disponible.';
 		const raw =
@@ -405,13 +449,26 @@
 				<div class="contact-card">
 					<h3>¿Te interesa esta propiedad?</h3>
 					<p>Contáctanos para agendar una visita.</p>
-					<form class="contact-form" on:submit|preventDefault>
-						<input type="text" placeholder="Nombre" class="form-input" />
-						<input type="email" placeholder="Correo electrónico" class="form-input" />
-						<input type="tel" placeholder="Teléfono" class="form-input" />
-						<textarea placeholder="Mensaje" class="form-input" rows="4"></textarea>
-						<button class="btn btn-primary full-width">Enviar Mensaje</button>
-					</form>
+					{#if formSubmitted}
+						<div class="success-alert">
+							✅ ¡Gracias! Hemos recibido tu mensaje y se ha enviado a nuestro equipo. Te contactaremos pronto.
+						</div>
+					{:else}
+						{#if formError}
+							<div class="error-alert">
+								⚠️ {formError}
+							</div>
+						{/if}
+						<form class="contact-form" on:submit|preventDefault={handleContactSubmit}>
+							<input type="text" placeholder="Nombre" bind:value={contactName} required class="form-input" />
+							<input type="email" placeholder="Correo electrónico" bind:value={contactEmail} required class="form-input" />
+							<input type="tel" placeholder="Teléfono / WhatsApp" bind:value={contactPhone} class="form-input" />
+							<textarea placeholder="Mensaje" bind:value={contactMessage} class="form-input" rows="4"></textarea>
+							<button type="submit" class="btn btn-primary full-width" disabled={submittingForm}>
+								{submittingForm ? 'Enviando...' : 'Enviar Mensaje'}
+							</button>
+						</form>
+					{/if}
 				</div>
 			</aside>
 		</div>
@@ -635,6 +692,29 @@
 	}
 	.full-width {
 		width: 100%;
+	}
+
+	.success-alert {
+		background-color: #d4edda;
+		color: #155724;
+		border: 1px solid #c3e6cb;
+		padding: 1rem;
+		border-radius: 6px;
+		text-align: center;
+		font-weight: 500;
+		font-size: 0.95rem;
+	}
+
+	.error-alert {
+		background-color: #f8d7da;
+		color: #721c24;
+		border: 1px solid #f5c6cb;
+		padding: 0.8rem;
+		border-radius: 6px;
+		text-align: center;
+		font-weight: 500;
+		font-size: 0.9rem;
+		margin-bottom: 0.8rem;
 	}
 
 	/* Carousel Styles */

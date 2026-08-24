@@ -41,10 +41,29 @@
 	}
 
 	$: displayName = extractContactName(contact, clientName);
-	$: formName = extractContactName(contact, '');
-	$: formEmail = extractContactEmail(contact);
-	$: formPhone = extractContactPhone(contact);
+
+	let formName = '';
+	let formEmail = '';
+	let formPhone = '';
 	let userMessage = '';
+	let submittingForm = false;
+	let formError = null;
+
+	$: if (contact) {
+		const extractedName = extractContactName(contact, '');
+		const extractedEmail = extractContactEmail(contact);
+		const extractedPhone = extractContactPhone(contact);
+
+		if (!formName && extractedName && extractedName !== 'Cliente') {
+			formName = extractedName;
+		}
+		if (!formEmail && extractedEmail) {
+			formEmail = extractedEmail;
+		}
+		if (!formPhone && extractedPhone) {
+			formPhone = extractedPhone;
+		}
+	}
 
 	onMount(async () => {
 		if (contactId && !contact) {
@@ -220,8 +239,39 @@
 
 	$: locationPath = $page.url.pathname + $page.url.search;
 
-	function handleFormSubmit() {
-		formSubmitted = true;
+	async function handleFormSubmit() {
+		submittingForm = true;
+		formError = null;
+
+		try {
+			const res = await fetch('/api/contact', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					name: formName || displayName || 'Cliente',
+					email: formEmail,
+					phone: formPhone,
+					message: userMessage,
+					propertyId: anchorPublicId,
+					propertyTitle: anchorProperty?.title || null,
+					pageUrl: typeof window !== 'undefined' ? window.location.href : null
+				})
+			});
+
+			const result = await res.json();
+			if (res.ok && result.success) {
+				formSubmitted = true;
+			} else {
+				formError = result.error || 'Ocurrió un error al enviar tu información. Intenta de nuevo.';
+			}
+		} catch (err) {
+			console.error('Error enviando formulario:', err);
+			formError = 'No se pudo conectar con el servidor. Revisa tu conexión a internet.';
+		} finally {
+			submittingForm = false;
+		}
 	}
 </script>
 
@@ -409,9 +459,15 @@
 
 				{#if formSubmitted}
 					<div class="success-alert">
-						✅ ¡Gracias {displayName || 'por comunicarte'}! Hemos recibido tu mensaje. Te contactaremos pronto.
+						✅ ¡Gracias {displayName || 'por comunicarte'}! Hemos recibido tu mensaje y se ha enviado a nuestro equipo. Te contactaremos a la brevedad.
 					</div>
 				{:else}
+					{#if formError}
+						<div class="error-alert">
+							⚠️ {formError}
+						</div>
+					{/if}
+
 					<form class="proposal-contact-form" on:submit|preventDefault={handleFormSubmit}>
 						<div class="form-row">
 							<div class="form-group">
@@ -442,7 +498,7 @@
 									id="phone"
 									type="tel"
 									bind:value={formPhone}
-									placeholder="(55) 1234 5678"
+									placeholder="(614) 123 4567"
 									class="form-input"
 								/>
 							</div>
@@ -457,8 +513,8 @@
 								class="form-input"
 							></textarea>
 						</div>
-						<button type="submit" class="btn btn-primary submit-btn">
-							📅 Solicitar Información / Agendar Cita
+						<button type="submit" class="btn btn-primary submit-btn" disabled={submittingForm}>
+							{submittingForm ? 'Enviando...' : '📅 Solicitar Información / Agendar Cita'}
 						</button>
 					</form>
 				{/if}
@@ -698,6 +754,17 @@
 		text-align: center;
 		font-weight: 500;
 		font-size: 1.1rem;
+	}
+
+	.error-alert {
+		background-color: #f8d7da;
+		color: #721c24;
+		border: 1px solid #f5c6cb;
+		padding: 1rem;
+		border-radius: 8px;
+		text-align: center;
+		font-weight: 500;
+		margin-bottom: 1rem;
 	}
 
 	@media (max-width: 768px) {
