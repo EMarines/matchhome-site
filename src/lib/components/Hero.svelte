@@ -1,4 +1,6 @@
 <script>
+	import { page } from '$app/stores';
+
 	export let searchValue = '';
 	export let onSearch;
 
@@ -19,8 +21,11 @@
 <section class="hero">
 	<div class="hero-overlay"></div>
 	<div class="container hero-content">
+		<div class="hero-slogan-tag">
+			<span>✨ {$page.data.tenant?.slogan || 'Tu Futuro En Buenas Manos'}</span>
+		</div>
 		<h2 class="hero-title">Encuentra tu hogar ideal</h2>
-		<p class="hero-subtitle">Las mejores propiedades en exclusiva para ti</p>
+		<p class="hero-subtitle">Las mejores propiedades en exclusiva para ti en Chihuahua</p>
 
 		<div class="search-bar">
 			<input
@@ -62,6 +67,22 @@
 		width: 100%;
 		max-width: 800px;
 		padding: 0 var(--spacing-md);
+	}
+	.hero-slogan-tag {
+		display: inline-block;
+		margin-bottom: 0.75rem;
+	}
+	.hero-slogan-tag span {
+		font-family: 'Segoe Print', 'Segoe Script', 'Comic Sans MS', cursive, sans-serif;
+		background: rgba(0, 0, 0, 0.45);
+		color: var(--color-secondary, #d9a036);
+		padding: 6px 18px;
+		border-radius: 25px;
+		font-size: 1.05rem;
+		font-weight: 700;
+		border: 1px solid rgba(217, 160, 54, 0.4);
+		backdrop-filter: blur(4px);
+		letter-spacing: 0.5px;
 	}
 	.hero-title {
 		font-size: 3.5rem;

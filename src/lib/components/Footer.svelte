@@ -15,11 +15,10 @@
 				{:else}
 					<h3 class="footer-logo">{$page.data.tenant?.name || 'MatchHome'}</h3>
 				{/if}
-				<span class="footer-slogan">Tu patrimonio en buenas manos</span>
+				<span class="footer-slogan">{$page.data.tenant?.slogan || 'Tu Futuro En Buenas Manos'}</span>
 			</a>
 			<p class="footer-desc">
-				Tu aliado confiable para encontrar la propiedad de tus sueños. Experiencia, seguridad y
-				confianza.
+				{$page.data.tenant?.description || 'Tu aliado confiable para encontrar la propiedad de tus sueños. Experiencia, seguridad y confianza.'}
 			</p>
 		</div>
 		<div class="footer-column">
@@ -34,14 +33,15 @@
 		<div class="footer-column">
 			<h4 class="footer-title">Contacto</h4>
 			<ul class="footer-contact">
-				<li>📍 Av. Francisco Villa # 5700, Col. Panamericana</li>
-				<li>📞 <a href="tel:6145404003">614 540 4003</a></li>
-				<li>✉️ <a href="mailto:matchhomebr@gmail.com">matchhomebr@gmail.com</a></li>
+				<li>📍 {$page.data.tenant?.address || 'Av. Francisco Villa # 5700, Col. Panamericana, Chihuahua'}</li>
+				<li>📞 <a href="tel:{$page.data.tenant?.phone?.replace(/\s+/g, '') || '6145404003'}">{$page.data.tenant?.phone || '614 540 4003'}</a></li>
+				<li>✉️ <a href="mailto:{$page.data.tenant?.email || 'matchhomebr@gmail.com'}">{$page.data.tenant?.email || 'matchhomebr@gmail.com'}</a></li>
+				<li>🕒 {$page.data.tenant?.schedule || 'Lun - Vie: 9:00 - 19:00 | Sáb: 9:00 - 14:00'}</li>
 			</ul>
 		</div>
 	</div>
 	<div class="footer-bottom">
-		<p>&copy; {new Date().getFullYear()} {$page.data.tenant?.name || 'MatchHome'}. Todos los derechos reservados.</p>
+		<p>&copy; {new Date().getFullYear()} {$page.data.tenant?.name || 'MatchHome'}. Todos los derechos reservados. | <em>{$page.data.tenant?.slogan || 'Tu Futuro En Buenas Manos'}</em></p>
 	</div>
 </footer>
 

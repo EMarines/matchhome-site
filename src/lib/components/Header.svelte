@@ -24,7 +24,7 @@
 				{:else}
 					<h1>{$page.data.tenant?.name || 'MatchHome'}</h1>
 				{/if}
-				<span class="logo-slogan">Tu patrimonio en buenas manos</span>
+				<span class="logo-slogan">{$page.data.tenant?.slogan || 'Tu Futuro En Buenas Manos'}</span>
 			</a>
 		</div>
 
@@ -49,10 +49,10 @@
 				<button class="close-btn" on:click={closeMenu} aria-label="Cerrar menú">✕</button>
 			</div>
 			<ul class="nav-list">
-				<li><a href="/" class="nav-link" on:click={closeMenu}>Inicio</a></li>
-				<li><a href="/propiedades" class="nav-link" on:click={closeMenu}>Propiedades</a></li>
-				<li><a href="/nosotros" class="nav-link" on:click={closeMenu}>Nosotros</a></li>
-				<li><a href="/contacto" class="nav-link" on:click={closeMenu}>Contacto</a></li>
+				<li><a href="/" class="nav-link {$page.url.pathname === '/' ? 'active' : ''}" on:click={closeMenu}>Inicio</a></li>
+				<li><a href="/propiedades" class="nav-link {$page.url.pathname.startsWith('/propiedades') || $page.url.pathname.startsWith('/property') ? 'active' : ''}" on:click={closeMenu}>Propiedades</a></li>
+				<li><a href="/nosotros" class="nav-link {$page.url.pathname.startsWith('/nosotros') ? 'active' : ''}" on:click={closeMenu}>Nosotros</a></li>
+				<li><a href="/contacto" class="nav-link {$page.url.pathname.startsWith('/contacto') ? 'active' : ''}" on:click={closeMenu}>Contacto</a></li>
 			</ul>
 		</nav>
 	</div>
@@ -127,10 +127,13 @@
 		background-color: var(--color-secondary);
 		transition: width 0.3s;
 	}
-	.nav-link:hover {
+	.nav-link:hover,
+	.nav-link.active {
 		color: var(--color-primary);
+		font-weight: 600;
 	}
-	.nav-link:hover:after {
+	.nav-link:hover:after,
+	.nav-link.active:after {
 		width: 100%;
 	}
 	
