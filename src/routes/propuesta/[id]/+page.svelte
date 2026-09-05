@@ -18,7 +18,9 @@
 
 	function extractContactName(c, fallback) {
 		if (!c) return fallback || 'Cliente';
+		const combinedFirstLast = c.name && c.lastname ? `${c.name} ${c.lastname}`.trim() : null;
 		return (
+			combinedFirstLast ||
 			c.name ||
 			c.nombre ||
 			c.fullName ||
@@ -37,7 +39,7 @@
 
 	function extractContactPhone(c) {
 		if (!c) return '';
-		return c.phone || c.telefono || c.celular || c.mobile || c.phone_number || '';
+		return c.phone || c.telefono || c.telephon || c.celular || c.mobile || c.phone_number || '';
 	}
 
 	$: displayName = extractContactName(contact, clientName);

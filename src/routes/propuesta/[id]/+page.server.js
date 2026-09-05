@@ -20,6 +20,7 @@ export async function load({ params, url, locals }) {
         const cData = contactDoc.data();
         contact = { id: contactDoc.id, ...cData };
         const fetchedName =
+          (cData.name && cData.lastname ? `${cData.name} ${cData.lastname}`.trim() : null) ||
           cData.name ||
           cData.nombre ||
           cData.fullName ||
