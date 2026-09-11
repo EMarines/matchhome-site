@@ -1,48 +1,38 @@
 # 📋 Directrices Operativas del Repositorio — MatchHomeSite
 
 ## 1. Identidad y Misión del Proyecto
-Este repositorio (`matchhome-site`) contiene el portal web oficial y sistema de catálogo público de **MatchHome Bienes Raíces** (`https://matchhome.vercel.app/`), desarrollado sobre **SvelteKit** y desplegado en **Vercel**. Su propósito es ofrecer una experiencia de usuario ultra-rápida, moderna y de alta conversión para compradores, arrendatarios y propietarios en Chihuahua.
+Este repositorio (`matchhome-site`) contiene el portal web oficial y el sistema de **Propuestas Inmobiliarias Personalizadas** de **MatchHome Bienes Raíces** (`https://matchhome.vercel.app/`), desarrollado sobre **SvelteKit** y desplegado en **Vercel**.
 
 ---
 
-## 2. Regla de Oro Inviolable (Protocolo de 3 Fases Estrictas)
-> ⚠️ **MANDATO OBLIGATORIO:** Ningún agente o desarrollador puede escribir código, refactorizar componentes o modificar dependencias sin completar rigurosamente este ciclo:
-
-1. **Fase 1 — Diagnóstico y Preguntas Obligatorias:**
-   - Prohibido asumir o programar a ciegas.
-   - Analizar el estado actual del repositorio, verificar dependencias y formular preguntas concisas (1 a la vez con viñetas) para resolver cualquier ambigüedad.
-   - Esperar la respuesta y validación explícita de Enrique.
-2. **Fase 2 — Plan de Acción y Aprobación:**
-   - Presentar un plan de arquitectura detallado con archivos a modificar/crear y estrategia de verificación.
-   - **Detener la ejecución** y esperar la orden explícita ("Proceder", "Adelante").
-3. **Fase 3 — Ejecución Quirúrgica y Verificación:**
-   - Implementar los cambios de forma atómica.
-   - Ejecutar verificaciones (`npm run check`, `npm run build`).
-   - Entregar reporte de cierre y registrar avances.
+## 2. Regla Fundamental de Datos: Solo Firebase Firestore
+- **Cero EasyBroker:** La aplicación **NO** debe consultar EasyBroker en tiempo real ni implementar webhooks/scrapers.
+- **Fuente de Verdad:** Toda la información proviene de **Firebase Firestore (`matchhome-crm-46de4`)**:
+  - `contacts`: Datos del cliente (nombre, teléfono, correo) para personalizar `/propuesta/[id]?c=contact_id`.
+  - `properties`: Catálogo de inventario para alimentar la casa ancla, las propiedades sugeridas y el catálogo público.
+- **Respaldo Local:** Si Firestore no está conectado en local, se utiliza `inventory.json` como fallback seguro.
 
 ---
 
-## 3. Principio Canónico de Honestidad Técnica Radical
-- **Cero Complacencia:** Prohibido condescender o "dar por su lado" a Enrique.
-- Si una implementación degrada el rendimiento, rompe la compatibilidad móvil, sobrepasa las cuotas de API de EasyBroker o genera deuda técnica, el agente debe manifestarlo con firmeza y datos técnicos.
-- *"Cada proyecto es infinitamente más importante que el ego."*
+## 3. Regla de Oro Inviolable (3 Fases Estrictas)
+1. **Fase 1 — Diagnóstico y Preguntas Obligatorias:** Validar supuestos, credenciales de Firebase en `.env` y resolver dudas antes de codificar.
+2. **Fase 2 — Plan de Acción y Aprobación:** Presentar el plan paso a paso y esperar confirmación explícita ("Proceder").
+3. **Fase 3 — Ejecución Quirúrgica y Verificación:** Desarrollar, probar compilación (`npm run build`) y verificar que las rutas `/propuesta/[id]` y `/propiedades` funcionen impecablemente.
 
 ---
 
 ## 4. Política de Respaldo Continuo en GitHub
-- Todo hito completado y validado debe respaldarse de inmediato en el repositorio remoto:
+- Todo cambio probado debe subirse inmediatamente:
   ```bash
   git add -A
-  git commit -m "feat/fix: descripción técnica concisa"
+  git commit -m "feat/fix: descripción clara"
   git push origin main
   ```
-- No se da por cerrado ningún ticket o tarea sin el respectivo push confirmado en GitHub.
 
 ---
 
-## 5. Estándares Técnicos del Stack
-- **Framework:** Svelte / SvelteKit con SSR/prerender donde aplique.
-- **Estilos:** Tailwind CSS con componentes semánticos y tokens de color oficiales (`primary: #0056b3`, `secondary: #c5a059`).
-- **Persistencia & API:** Supabase (PostgreSQL) para catálogo sincronizado y consultas paginadas (`LIMIT 20/50/100`).
-- **Sincronización:** Supabase Edge Function programada para ingesta periódica desde EasyBroker API.
-- **Rendimiento Móvil:** Prohibido incluir librerías pesadas de mapas en la vista de lista principal; privilegiar filtros rápidos por chips de zonas/colonias.
+## 5. Estándares Técnicos
+- **Framework:** SvelteKit + Tailwind CSS.
+- **Paginación:** Selector visible en catálogo para mostrar 20, 50 o 100 propiedades.
+- **Filtros:** Chips facetados por zonas de Chihuahua (Distrito 1, San Felipe, Campestre, El Reliz, Aeropuerto, etc.).
+- **Conversión:** WhatsApp contextualizado con la clave y título de la propiedad compartida.

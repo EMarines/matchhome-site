@@ -1,18 +1,21 @@
-# 🏠 MatchHome Web — Portal Inmobiliario & Sistema de Catálogo
+# 🏠 MatchHome Web — Portal & Propuestas Inmobiliarias
 
-Portal web oficial de **MatchHome Bienes Raíces** en Chihuahua, México (`https://matchhome.vercel.app/`).
+Portal web oficial y motor de propuestas personalizadas de **MatchHome Bienes Raíces** en Chihuahua, México (`https://matchhome.vercel.app/`).
 
 ---
 
 ## 🏗️ Arquitectura del Sistema
 
 - **Frontend:** SvelteKit + Tailwind CSS.
-- **Base de Datos & Catálogo:** Supabase (PostgreSQL) con paginación nativa exacta (20, 50, 100) y filtros facetados indexados.
-- **Sincronización:** Supabase Edge Function programada (`cron`) que consume la API de EasyBroker en lotes y realiza `upsert` continuo en la base de datos.
-- **Funnels de Conversión:**
-  - WhatsApp directo contextualizado por ficha de propiedad.
-  - Calculadora interactiva de crédito hipotecario.
-  - Formulario de consignación y captación para propietarios.
+- **Base de Datos:** **Firebase Firestore (`matchhome-crm-46de4`)**
+  - `contacts`: Prospectos y clientes para personalizar propuestas por ID (`?c=contactId`).
+  - `properties`: Inventario de propiedades activas.
+- **Ruta Estrella:** `/propuesta/[id]?c=contact_id`
+  - Saludo personalizado con el nombre del cliente.
+  - Ficha completa de la propiedad ancla compartida.
+  - Sección inteligente de "Propiedades que te podrían interesar" (matching por presupuesto y tipo de inmueble).
+- **Catálogo Público:** `/propiedades` con selector de paginación para **20, 50 y 100 propiedades**, y filtros facetados por zonas de Chihuahua.
+- **Conversión:** Botón de WhatsApp directo pre-cargado con el nombre del cliente y datos de la casa.
 - **Despliegue:** Vercel con integración continua (`origin/main`).
 
 ---
@@ -20,19 +23,21 @@ Portal web oficial de **MatchHome Bienes Raíces** en Chihuahua, México (`https
 ## 🚀 Variables de Entorno Requeridas (`.env`)
 
 ```env
-# Supabase
-PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+# Firebase Admin SDK (Servidor)
+FIREBASE_PROJECT_ID=matchhome-crm-46de4
+FIREBASE_CLIENT_EMAIL=your-service-account@matchhome-crm-46de4.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
-# EasyBroker API (utilizado por Edge Functions)
-EASYBROKER_API_KEY=your_easybroker_api_key
+# Firebase Client SDK (Navegador)
+PUBLIC_FIREBASE_API_KEY=your-api-key
+PUBLIC_FIREBASE_AUTH_DOMAIN=matchhome-crm-46de4.firebaseapp.com
+PUBLIC_FIREBASE_PROJECT_ID=matchhome-crm-46de4
+PUBLIC_FIREBASE_STORAGE_BUCKET=matchhome-crm-46de4.firebasestorage.app
+PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+PUBLIC_FIREBASE_APP_ID=your-app-id
 
-# Configuración de Tenant / MatchHome
-PUBLIC_TENANT_NAME="MatchHome"
-PUBLIC_TENANT_PHONE="614 540 4003"
-PUBLIC_TENANT_PHONE_RAW="526145404003"
-PUBLIC_TENANT_EMAIL="matchhomebr@gmail.com"
+# MatchHome Config
+PUBLIC_TENANT_PHONE_RAW=526145404003
 ```
 
 ---
@@ -43,17 +48,9 @@ PUBLIC_TENANT_EMAIL="matchhomebr@gmail.com"
 # Instalar dependencias
 npm install
 
-# Iniciar servidor de desarrollo
+# Servidor local
 npm run dev
 
-# Verificación de tipos y formato
-npm run check
-
-# Compilación para producción
+# Verificación de compilación
 npm run build
 ```
-
----
-
-## 📜 Gobernanza del Repositorio
-Consulta [AGENTS.md](AGENTS.md) para las reglas operativas, el protocolo de 3 fases estrictas y la política de respaldo continuo en GitHub. Para orquestar nuevas características con agentes de IA, utiliza [PROMPT_MAESTRO.md](PROMPT_MAESTRO.md).
