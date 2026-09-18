@@ -6,7 +6,7 @@
 	import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 	export let data;
-	$: ({ anchorProperty, similarProperties, clientName, contact: serverContact, contactId: serverContactId } = data);
+	$: ({ anchorProperty, similarProperties, clientName, clientPhone, contact: serverContact, contactId: serverContactId } = data);
 
 	let loadedContact = null;
 	let contactLoading = false;
@@ -51,12 +51,19 @@
 	let submittingForm = false;
 	let formError = null;
 
+	$: if (!formName && clientName && clientName !== 'Cliente') {
+		formName = clientName;
+	}
+	$: if (!formPhone && clientPhone) {
+		formPhone = clientPhone;
+	}
+
 	$: if (contact) {
 		const extractedName = extractContactName(contact, '');
 		const extractedEmail = extractContactEmail(contact);
 		const extractedPhone = extractContactPhone(contact);
 
-		if (!formName && extractedName && extractedName !== 'Cliente') {
+		if ((!formName || formName === 'Cliente') && extractedName && extractedName !== 'Cliente') {
 			formName = extractedName;
 		}
 		if (!formEmail && extractedEmail) {

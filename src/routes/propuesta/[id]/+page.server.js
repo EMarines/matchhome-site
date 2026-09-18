@@ -7,7 +7,8 @@ export async function load({ params, url, locals }) {
   const { id } = params;
   const db = locals.db;
   const contactId = url.searchParams.get('c');
-  let clientName = url.searchParams.get('cliente') || 'Cliente';
+  let clientName = url.searchParams.get('cliente') || '';
+  const clientPhone = url.searchParams.get('tel') || url.searchParams.get('telefono') || url.searchParams.get('phone') || '';
   const targetBudget = parseFloat(url.searchParams.get('presupuesto'));
   let contact = null;
 
@@ -30,10 +31,21 @@ export async function load({ params, url, locals }) {
         if (fetchedName) {
           clientName = fetchedName;
         }
+      } else if (!clientName && contactId) {
+        clientName = contactId;
       }
     } catch (e) {
       console.error('Error loading contact from Firestore on server:', e);
+      if (!clientName && contactId) {
+        clientName = contactId;
+      }
     }
+  } else if (!clientName && contactId) {
+    clientName = contactId;
+  }
+
+  if (!clientName) {
+    clientName = 'Cliente';
   }
 
   let anchorProperty = null;
@@ -160,6 +172,7 @@ export async function load({ params, url, locals }) {
     anchorProperty: serializeFirestoreData(anchorProperty),
     similarProperties: serializeFirestoreData(similarProperties),
     clientName,
+    clientPhone,
     contact: serializeFirestoreData(contact),
     contactId
   };
