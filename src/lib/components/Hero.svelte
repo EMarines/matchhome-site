@@ -104,16 +104,16 @@
 	}
 	.hero-slogan-tag span {
 		font-family: 'Segoe Print', 'Segoe Script', 'Comic Sans MS', cursive, sans-serif;
-		background: rgba(0, 0, 0, 0.45);
+		background: rgba(0, 0, 0, 0.07);
 		color: var(--color-secondary, #d9a036);
-		padding: 8px 24px;
+		padding: 8px 26px;
 		border-radius: 30px;
 		font-size: 1.35rem;
 		font-weight: 700;
-		border: 1px solid rgba(217, 160, 54, 0.45);
-		backdrop-filter: blur(5px);
+		border: 1px solid rgba(217, 160, 54, 0.35);
+		backdrop-filter: blur(4px);
 		letter-spacing: 0.5px;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 		display: inline-block;
 	}
 	.hero-title {
