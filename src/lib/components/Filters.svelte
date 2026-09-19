@@ -1,9 +1,15 @@
 <script>
 	export let filters = {};
+	export let search = '';
+	export let limit = 24;
 	export let onFilterChange;
+	export let onSearchChange;
+	export let onLimitChange;
 	export let onClear;
 	export let onClose;
 	export let totalMatches = null;
+
+	let debounceTimer;
 
 	const ZONES = ['Norte', 'CentroNorte', 'Centro', 'CentroSur', 'Sur', 'Este', 'Oeste'];
 	const AMENITIES = [
@@ -30,7 +36,26 @@
 		onFilterChange(name, value);
 	}
 
+	function handleSearchInput(e) {
+		const val = e.target.value;
+		clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(() => {
+			if (onSearchChange) onSearchChange(val);
+		}, 250);
+	}
+
+	function clearSearchText() {
+		clearTimeout(debounceTimer);
+		if (onSearchChange) onSearchChange('');
+	}
+
+	function handleLimitSelect(e) {
+		const val = parseInt(e.target.value) || 24;
+		if (onLimitChange) onLimitChange(val);
+	}
+
 	$: activeCount = [
+		search ? 1 : null,
 		filters.operationType,
 		filters.propertyType,
 		filters.bedrooms > 0 ? filters.bedrooms : null,
@@ -52,6 +77,25 @@
 			{/if}
 		</div>
 		<button class="close-icon-btn" on:click={onClose} aria-label="Cerrar panel de filtros">✕</button>
+	</div>
+
+	<!-- Input de texto para búsqueda directa por Colonia, Clave o Título -->
+	<div class="text-search-section">
+		<label for="filter-text-search">Búsqueda rápida por texto (Colonia, Clave o Título)</label>
+		<div class="search-input-box">
+			<span class="search-icon">🔍</span>
+			<input
+				type="text"
+				id="filter-text-search"
+				placeholder="Ej. San Felipe, EB-FM6734, Casa en Venta, Cantera..."
+				value={search}
+				on:input={handleSearchInput}
+				class="text-search-input"
+			/>
+			{#if search}
+				<button type="button" class="clear-search-btn" on:click={clearSearchText} aria-label="Borrar texto">✕</button>
+			{/if}
+		</div>
 	</div>
 
 	<div class="filters-grid">
@@ -125,6 +169,21 @@
 				<option value="1">1+ Autos</option>
 				<option value="2">2+ Autos</option>
 				<option value="3">3+ Autos</option>
+			</select>
+		</div>
+
+		<div class="filter-group limit-group">
+			<label for="filter-limit-select">Propiedades a mostrar</label>
+			<select
+				id="filter-limit-select"
+				value={limit}
+				on:change={handleLimitSelect}
+			>
+				<option value="12">12 propiedades por página</option>
+				<option value="24">24 propiedades por página</option>
+				<option value="48">48 propiedades por página</option>
+				<option value="96">96 propiedades por página</option>
+				<option value="200">200 (Ver todas)</option>
 			</select>
 		</div>
 
@@ -288,6 +347,66 @@
 		color: #1a202c;
 	}
 
+	/* Input de texto dentro de los filtros */
+	.text-search-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.text-search-section label {
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--color-primary, #0056b3);
+	}
+
+	.search-input-box {
+		display: flex;
+		align-items: center;
+		background: #f8fafc;
+		border: 1.5px solid #cbd5e0;
+		border-radius: 8px;
+		padding: 0.2rem 0.75rem;
+		transition: all 0.2s;
+	}
+
+	.search-input-box:focus-within {
+		border-color: var(--color-primary, #0056b3);
+		background: #ffffff;
+		box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15);
+	}
+
+	.search-icon {
+		font-size: 1.1rem;
+		color: #718096;
+		margin-right: 0.5rem;
+	}
+
+	.text-search-input {
+		flex: 1;
+		border: none;
+		background: transparent;
+		padding: 0.55rem 0.25rem;
+		font-size: 0.95rem;
+		outline: none;
+		color: #2d3748;
+		font-weight: 500;
+	}
+
+	.clear-search-btn {
+		background: transparent;
+		border: none;
+		color: #a0aec0;
+		font-size: 0.9rem;
+		cursor: pointer;
+		padding: 4px;
+		border-radius: 50%;
+	}
+
+	.clear-search-btn:hover {
+		color: #e53e3e;
+	}
+
 	.filters-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -323,6 +442,12 @@
 	.filter-group input:focus {
 		border-color: var(--color-primary, #0056b3);
 		box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15);
+	}
+
+	.limit-group select {
+		font-weight: 600;
+		color: var(--color-primary, #0056b3);
+		background-color: #f8fafc;
 	}
 
 	.price-group {

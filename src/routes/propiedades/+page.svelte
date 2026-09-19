@@ -263,7 +263,19 @@
 	{#if showFilters}
 		<Filters
 			{filters}
+			{search}
+			{limit}
 			totalMatches={pagination.total}
+			onSearchChange={(val) => {
+				search = val;
+				currentPage = 1;
+				updateUrl();
+			}}
+			onLimitChange={(newLimit) => {
+				limit = newLimit;
+				currentPage = 1;
+				updateUrl();
+			}}
 			onFilterChange={handleFilterChange}
 			onClear={clearFilters}
 			onClose={() => (showFilters = false)}
