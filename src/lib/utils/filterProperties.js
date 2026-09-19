@@ -48,13 +48,13 @@ const PROPERTY_TYPE_SYNONYMS = {
   villa: ['villa', 'quinta']
 };
 
-export function filterProperties(inventoryData = [], search = '', filters = {}, page = 1, limit = 20) {
+export function filterProperties(inventoryData = [], search = '', filters = {}, page = 1, limit = 24) {
   const term = normalizeText(search);
 
   const filtered = inventoryData.filter((p) => {
     if (!p) return false;
 
-    // --- 1. Extracción de textos para búsqueda libre ---
+    // --- 1. Extracción de textos para búsqueda libre (Colonia, Clave, Título, etc.) ---
     const title = normalizeText(p.titulo || p.title || '');
     const desc = normalizeText(p.descripcion || p.description || '');
     const id = normalizeText(p.easybroker_id || p.public_id || p.id || p.internal_id || p.clave || '');
@@ -111,14 +111,12 @@ export function filterProperties(inventoryData = [], search = '', filters = {}, 
           matchesPrice = amt >= minPrice && amt <= maxPrice;
         }
       } else {
-        // Si no hay filtro de operación, checamos si alguna operación cumple el rango de precio
         matchesPrice = operations.some((o) => {
           const amt = parseNumber(o.amount ?? p.price ?? p.precio);
           return amt >= minPrice && amt <= maxPrice;
         });
       }
     } else {
-      // Propiedad sin arreglo operations: usar campos directos
       const directOp = getOpTypeNormalized(p.selecTO || p.tipoOperacion || p.operation_type || '');
       if (targetOp && directOp && !directOp.includes(targetOp) && !targetOp.includes(directOp)) {
         matchesOp = false;
@@ -143,7 +141,18 @@ export function filterProperties(inventoryData = [], search = '', filters = {}, 
     const selectedTags = (filters.tags || []).map(normalizeText).filter(Boolean);
 
     if (selectedTags.length > 0) {
-      const KNOWN_ZONES = ['norte', 'sur', 'este', 'oeste', 'centronorte', 'centrosur', 'centro norte', 'centro sur', 'centro'];
+      // Lista oficial de zonas de Chihuahua
+      const KNOWN_ZONES = [
+        'norte',
+        'noroeste',
+        'noreste',
+        'centronorte',
+        'centro norte',
+        'centrosur',
+        'centro sur',
+        'suroeste',
+        'sureste'
+      ];
       const selectedZones = selectedTags.filter((t) => KNOWN_ZONES.includes(t));
       const selectedAmenities = selectedTags.filter((t) => !KNOWN_ZONES.includes(t));
 
@@ -166,6 +175,9 @@ export function filterProperties(inventoryData = [], search = '', filters = {}, 
       const propertyAmenitySignals = [
         ...featureList,
         ...(Array.isArray(p.tags) ? p.tags : []),
+        p.fraccionamiento,
+        p.condominio,
+        p.privada,
         desc,
         title
       ]
@@ -187,6 +199,17 @@ export function filterProperties(inventoryData = [], search = '', filters = {}, 
       // Amenidades: AND (Debe contener todas las amenidades seleccionadas)
       if (selectedAmenities.length > 0) {
         const matchesAllAmenities = selectedAmenities.every((amenity) => {
+          // Soporte especial para Fracc. Privado / Fraccionamiento Cerrado / Privada
+          if (amenity.includes('fracc') || amenity.includes('privad')) {
+            return propertyAmenitySignals.some((sig) =>
+              sig.includes('fracc') ||
+              sig.includes('privad') ||
+              sig.includes('cerrad') ||
+              sig.includes('acceso controlado') ||
+              sig.includes('seguridad') ||
+              sig.includes('condominio')
+            );
+          }
           return propertyAmenitySignals.some((sig) => sig.includes(amenity));
         });
         if (!matchesAllAmenities) return false;
@@ -197,7 +220,7 @@ export function filterProperties(inventoryData = [], search = '', filters = {}, 
   });
 
   const total = filtered.length;
-  const parsedLimit = parseNumber(limit, 20);
+  const parsedLimit = parseNumber(limit, 24);
   const parsedPage = Math.max(1, parseNumber(page, 1));
   const start = (parsedPage - 1) * parsedLimit;
   const end = start + parsedLimit;

@@ -320,11 +320,16 @@
 
 	.catalog-header-area {
 		display: flex;
-		justify-content: space-between;
-		align-items: flex-end;
-		margin-bottom: 1.5rem;
-		flex-wrap: wrap;
-		gap: 1rem;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		margin-bottom: 2rem;
+		gap: 1.25rem;
+	}
+
+	.title-meta {
+		text-align: center;
 	}
 
 	.catalog-subtitle {
@@ -336,7 +341,8 @@
 	.header-controls {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		justify-content: center;
+		gap: 1.25rem;
 		flex-wrap: wrap;
 	}
 

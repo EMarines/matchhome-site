@@ -11,8 +11,12 @@
 
 	let debounceTimer;
 
-	const ZONES = ['Norte', 'CentroNorte', 'Centro', 'CentroSur', 'Sur', 'Este', 'Oeste'];
+	// Lista oficial de Zonas de Chihuahua en orden estricto
+	const ZONES = ['Norte', 'Noroeste', 'Noreste', 'Centronorte', 'Centrosur', 'Suroeste', 'Sureste'];
+
+	// Lista de Amenidades y Características
 	const AMENITIES = [
+		'Fracc. Privado',
 		'Una Planta',
 		'Recamara en Planta Baja',
 		'Alberca',
@@ -179,10 +183,10 @@
 				value={limit}
 				on:change={handleLimitSelect}
 			>
-				<option value="12">12 propiedades por página</option>
-				<option value="24">24 propiedades por página</option>
-				<option value="48">48 propiedades por página</option>
-				<option value="96">96 propiedades por página</option>
+				<option value="12">12 por página</option>
+				<option value="24">24 por página</option>
+				<option value="48">48 por página</option>
+				<option value="96">96 por página</option>
 				<option value="200">200 (Ver todas)</option>
 			</select>
 		</div>

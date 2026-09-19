@@ -323,7 +323,14 @@
 		margin-bottom: 2rem;
 		display: flex;
 		flex-direction: column;
-		gap: 1.25rem;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		gap: 1.5rem;
+	}
+
+	.header-titles {
+		text-align: center;
 	}
 
 	.page-title {
@@ -343,12 +350,16 @@
 		display: flex;
 		gap: 1rem;
 		align-items: center;
+		justify-content: center;
 		flex-wrap: wrap;
 		background: #ffffff;
-		padding: 1rem;
+		padding: 1rem 1.5rem;
 		border-radius: 12px;
 		border: 1px solid #e2e8f0;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+		width: 100%;
+		max-width: 820px;
+		margin: 0 auto;
 	}
 
 	.search-box {
