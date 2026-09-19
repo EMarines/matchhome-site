@@ -7,9 +7,9 @@ export async function load({ locals }) {
   
   try {
     if (db) {
-      // Filtrar solo propiedades activas y limitar a 100 para evitar costos de Firestore
+      // En la colección 'properties' solo se sincronizan propiedades activas.
+      // Limitamos a 100 para proteger la lectura de Firestore.
       const snapshot = await db.collection('properties')
-        .where('isActive', '==', true)
         .limit(100)
         .get();
       if (!snapshot.empty) {

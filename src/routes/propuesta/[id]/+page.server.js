@@ -127,8 +127,9 @@ export async function load({ params, url, locals }) {
       const filterTypeForPool = contactPropTypeEarly || anchorPropType;
 
       // Load active properties filtered by type directly in Firestore (much cheaper)
+      // Nota: Toda la colección 'properties' en Firestore contiene únicamente propiedades activas sincronizadas.
       try {
-        let poolQuery = db.collection('properties').where('isActive', '==', true);
+        let poolQuery = db.collection('properties');
         if (filterTypeForPool) {
           poolQuery = poolQuery.where('property_type', '==', filterTypeForPool);
         }
@@ -136,9 +137,9 @@ export async function load({ params, url, locals }) {
         if (!snapshot.empty) {
           allPropertiesPool = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
         }
-        // Fallback sin filtro de tipo si no trajo resultados (campo property_type inconsistente)
+        // Fallback sin filtro de tipo si no trajo resultados (campo property_type inconsistente o sin coincidencias)
         if (allPropertiesPool.length === 0) {
-          const fallbackSnap = await db.collection('properties').where('isActive', '==', true).limit(100).get();
+          const fallbackSnap = await db.collection('properties').limit(100).get();
           if (!fallbackSnap.empty) {
             allPropertiesPool = fallbackSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
           }
