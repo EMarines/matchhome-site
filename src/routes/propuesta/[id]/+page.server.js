@@ -7,8 +7,25 @@ export async function load({ params, url, locals }) {
   const { id } = params;
   const db = locals.db;
   const contactId = url.searchParams.get('c');
-  let clientName = url.searchParams.get('cliente') || '';
-  const clientPhone = url.searchParams.get('tel') || url.searchParams.get('telefono') || url.searchParams.get('phone') || '';
+  const paramNombre = url.searchParams.get('nombre') || url.searchParams.get('name') || url.searchParams.get('first_name') || url.searchParams.get('firstName') || '';
+  const paramApellido = url.searchParams.get('apellido') || url.searchParams.get('lastname') || url.searchParams.get('lastName') || url.searchParams.get('last_name') || url.searchParams.get('apellidos') || '';
+  const paramCliente = url.searchParams.get('cliente') || '';
+
+  let clientName = '';
+  if (paramNombre || paramApellido) {
+    clientName = `${paramNombre} ${paramApellido}`.trim();
+  } else if (paramCliente) {
+    clientName = paramCliente.trim();
+  }
+
+  let clientPhone =
+    url.searchParams.get('tel') ||
+    url.searchParams.get('telefono') ||
+    url.searchParams.get('phone') ||
+    url.searchParams.get('celular') ||
+    url.searchParams.get('mobile') ||
+    '';
+
   const targetBudget = parseFloat(url.searchParams.get('presupuesto'));
   let contact = null;
 
@@ -30,6 +47,16 @@ export async function load({ params, url, locals }) {
           cData.first_name;
         if (fetchedName) {
           clientName = fetchedName;
+        }
+        if (!clientPhone) {
+          clientPhone =
+            cData.phone ||
+            cData.telefono ||
+            cData.telephon ||
+            cData.celular ||
+            cData.mobile ||
+            cData.phone_number ||
+            '';
         }
       } else if (!clientName && contactId) {
         clientName = contactId;
