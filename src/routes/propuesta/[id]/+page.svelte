@@ -515,55 +515,95 @@
 						</div>
 					{/if}
 
-					<form class="proposal-contact-form" on:submit|preventDefault={handleFormSubmit}>
-						<div class="form-row">
-							<div class="form-group">
-								<label for="name">Nombre</label>
-								<input
-									id="name"
-									type="text"
-									bind:value={formName}
-									placeholder="Tu nombre completo"
-									required
-									class="form-input"
-								/>
-							</div>
-							<div class="form-group">
-								<label for="email">Correo Electrónico</label>
-								<input
-									id="email"
-									type="email"
-									bind:value={formEmail}
-									placeholder="correo@ejemplo.com"
-									required
-									class="form-input"
-								/>
-							</div>
-							<div class="form-group">
-								<label for="phone">Teléfono / WhatsApp</label>
-								<input
-									id="phone"
-									type="tel"
-									bind:value={formPhone}
-									placeholder="(614) 123 4567"
-									class="form-input"
-								/>
+					{#if hasPersonalName && formName}
+						<!-- ── MODO CONVERSACIONAL: contacto identificado ─────────────────────── -->
+						<div class="conversational-intro">
+							<p class="conversational-phrase">
+								{firstName}, cuéntanos qué te pareció esta propiedad. Tu opinión nos ayuda a encontrar opciones aún más afines a lo que buscas.
+							</p>
+							<div class="contact-confirm-badge">
+								👤 <strong>{formName}</strong>{formPhone ? ` · 📞 ${formPhone}` : ''}
 							</div>
 						</div>
-						<div class="form-group">
-							<label for="message">Mensaje / Horario de Preferencia</label>
-							<textarea
-								id="message"
-								bind:value={userMessage}
-								placeholder="Me interesa esta propiedad, me puedes contactar"
-								rows="3"
-								class="form-input"
-							></textarea>
-						</div>
-						<button type="submit" class="btn btn-primary submit-btn" disabled={submittingForm}>
-							{submittingForm ? 'Enviando...' : '📅 Solicitar Información / Agendar Cita'}
-						</button>
-					</form>
+
+						<form class="proposal-contact-form conversational-form" on:submit|preventDefault={handleFormSubmit}>
+							<div class="form-group">
+								<textarea
+									id="message"
+									bind:value={userMessage}
+									placeholder="¿Qué te gustó más? ¿Hay algo que no se ajusta a lo que buscas? ¿Te interesa agendar una visita?"
+									rows="4"
+									class="form-input conversational-textarea"
+								></textarea>
+							</div>
+							{#if !formEmail}
+								<div class="form-group">
+									<input
+										id="email"
+										type="email"
+										bind:value={formEmail}
+										placeholder="Tu correo electrónico (opcional)"
+										class="form-input"
+									/>
+								</div>
+							{/if}
+							<!-- Campos ocultos para llevar nombre y teléfono al envío -->
+							<button type="submit" class="btn btn-primary submit-btn" disabled={submittingForm}>
+								{submittingForm ? 'Enviando...' : '💬 Enviar mi opinión'}
+							</button>
+						</form>
+					{:else}
+						<!-- ── MODO ESTÁNDAR: contacto desconocido ───────────────────────────── -->
+						<form class="proposal-contact-form" on:submit|preventDefault={handleFormSubmit}>
+							<div class="form-row">
+								<div class="form-group">
+									<label for="name">Nombre</label>
+									<input
+										id="name"
+										type="text"
+										bind:value={formName}
+										placeholder="Tu nombre completo"
+										required
+										class="form-input"
+									/>
+								</div>
+								<div class="form-group">
+									<label for="email">Correo Electrónico</label>
+									<input
+										id="email"
+										type="email"
+										bind:value={formEmail}
+										placeholder="correo@ejemplo.com"
+										required
+										class="form-input"
+									/>
+								</div>
+								<div class="form-group">
+									<label for="phone">Teléfono / WhatsApp</label>
+									<input
+										id="phone"
+										type="tel"
+										bind:value={formPhone}
+										placeholder="(614) 123 4567"
+										class="form-input"
+									/>
+								</div>
+							</div>
+							<div class="form-group">
+								<label for="message">Mensaje / Horario de Preferencia</label>
+								<textarea
+									id="message"
+									bind:value={userMessage}
+									placeholder="Me interesa esta propiedad, me puedes contactar"
+									rows="3"
+									class="form-input"
+								></textarea>
+							</div>
+							<button type="submit" class="btn btn-primary submit-btn" disabled={submittingForm}>
+								{submittingForm ? 'Enviando...' : '📅 Solicitar Información / Agendar Cita'}
+							</button>
+						</form>
+					{/if}
 				{/if}
 			</div>
 		</section>
@@ -882,6 +922,42 @@
 		font-weight: 500;
 		margin-bottom: 1rem;
 	}
+
+	/* ── Modo Conversacional ─────────────────────────────────────────────────── */
+	.conversational-intro {
+		margin-bottom: 1.5rem;
+		text-align: center;
+	}
+
+	.conversational-phrase {
+		font-size: 1.1rem;
+		color: #444;
+		line-height: 1.6;
+		margin-bottom: 0.75rem;
+		font-style: italic;
+	}
+
+	.contact-confirm-badge {
+		display: inline-block;
+		background: #f0f4ff;
+		border: 1px solid #c9d8f5;
+		color: #0056b3;
+		border-radius: 20px;
+		padding: 0.4rem 1rem;
+		font-size: 0.9rem;
+	}
+
+	.conversational-form {
+		max-width: 560px;
+		margin: 0 auto;
+	}
+
+	.conversational-textarea {
+		font-size: 1rem;
+		min-height: 110px;
+		resize: vertical;
+	}
+
 
 	@media (max-width: 768px) {
 		.proposal-header {

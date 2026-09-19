@@ -118,15 +118,35 @@ export async function load({ params, url, locals }) {
         };
       }
 
-      // Load active properties for similar properties section (limit to avoid Firestore overcharge)
-      const snapshot = await db.collection('properties')
-        .where('isActive', '==', true)
-        .limit(200)
-        .get();
+      // ── Determinar tipo de contacto antes de la query del pool ────────────────
+      const isExistingContactEarly = Boolean(contact && contact.id);
+      const contactPropTypeEarly = isExistingContactEarly
+        ? (contact.selecTP || contact.typeProperty || '')
+        : '';
+      // Determinar el tipo de propiedad a filtrar en Firestore
+      const filterTypeForPool = contactPropTypeEarly || anchorPropType;
 
-      if (!snapshot.empty) {
-        allPropertiesPool = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      // Load active properties filtered by type directly in Firestore (much cheaper)
+      try {
+        let poolQuery = db.collection('properties').where('isActive', '==', true);
+        if (filterTypeForPool) {
+          poolQuery = poolQuery.where('property_type', '==', filterTypeForPool);
+        }
+        const snapshot = await poolQuery.limit(100).get();
+        if (!snapshot.empty) {
+          allPropertiesPool = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        }
+        // Fallback sin filtro de tipo si no trajo resultados (campo property_type inconsistente)
+        if (allPropertiesPool.length === 0) {
+          const fallbackSnap = await db.collection('properties').where('isActive', '==', true).limit(100).get();
+          if (!fallbackSnap.empty) {
+            allPropertiesPool = fallbackSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          }
+        }
+      } catch (poolErr) {
+        console.error('Error loading properties pool:', poolErr);
       }
+
     } catch (e) {
       console.error('Firestore proposal load failed:', e);
     }
@@ -205,7 +225,7 @@ export async function load({ params, url, locals }) {
       return true;
     });
 
-    // Ordenar por cercanía al presupuesto del contacto (si tiene), si no por precio
+    // Ordenar por cercanía al presupuesto del contacto (si tiene), si no por precio ancla
     const baseForSort = contactBudget || anchorBasePrice;
     similars.sort((a, b) => {
       const priceA = a.price || a.precio || (a.operations?.[0]?.amount) || 0;
@@ -213,14 +233,20 @@ export async function load({ params, url, locals }) {
       return Math.abs(priceA - baseForSort) - Math.abs(priceB - baseForSort);
     });
 
-    // Boost: propiedades que coincidan con ubicaciones o tags preferidos van primero
-    if (contactLocations.length > 0 || contactTags.length > 0) {
-      similars.sort((a, b) => {
-        const scoreA = _matchScore(a, contactLocations, contactTags);
-        const scoreB = _matchScore(b, contactLocations, contactTags);
-        return scoreB - scoreA; // mayor score primero
+    // ── Zona como filtro real con mínimo 6 ────────────────────────────────────
+    // Solo filtra por zona si hay al menos 6 propiedades que coincidan.
+    // Si hay menos, ignora la zona (muestra todas las que ya pasaron los otros filtros).
+    if (contactLocations.length > 0) {
+      const similarsInZone = similars.filter((p) => {
+        const pLocation = (p.location?.name || p.location || p.colonia || '').toLowerCase();
+        return contactLocations.some(l => pLocation.includes(l) || l.includes(pLocation));
       });
+      if (similarsInZone.length >= 6) {
+        similars = similarsInZone;
+      }
+      // Si <6, se queda con todos (sin filtro de zona)
     }
+
 
   } else {
     // ── CONTACTO NUEVO: filtrar por tipo y precio ±20% de la propiedad ancla ───
