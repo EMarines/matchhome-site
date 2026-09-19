@@ -383,9 +383,10 @@
 								{currentImageIndex + 1} / {galleryImages.length}
 							</div>
 						{/if}
+						<div class="main-price-tag">{price}</div>
 					</div>
 					{#if galleryImages && galleryImages.length > 1}
-						<div class="gallery-grid">
+						<div class="gallery-thumbnails-strip">
 							{#each galleryImages as imgUrl, i}
 								<button
 									type="button"
@@ -396,7 +397,7 @@
 									<img
 										src={imgUrl}
 										alt=""
-										class="gallery-image"
+										class="gallery-thumb-img"
 										on:error={(e) => {
 											e.currentTarget.src = NO_IMAGE_PLACEHOLDER;
 										}}
@@ -597,35 +598,75 @@
 		grid-template-columns: 2fr 1fr;
 		gap: var(--spacing-2xl);
 	}
-	.gallery-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-		gap: var(--spacing-md);
-		margin-top: var(--spacing-md);
+	.gallery-thumbnails-strip {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 10px;
+		margin-bottom: 0;
+		overflow-x: auto;
+		padding-bottom: 6px;
+		scrollbar-width: thin;
+		scrollbar-color: #ccc transparent;
+		-webkit-overflow-scrolling: touch;
 	}
+
+	.gallery-thumbnails-strip::-webkit-scrollbar {
+		height: 5px;
+	}
+
+	.gallery-thumbnails-strip::-webkit-scrollbar-thumb {
+		background: #ccc;
+		border-radius: 4px;
+	}
+
 	.gallery-thumb-btn {
-		background: none;
-		border: 2px solid transparent;
-		padding: 0;
-		margin: 0;
-		cursor: pointer;
+		width: 60px;
+		height: 46px;
 		border-radius: 6px;
 		overflow: hidden;
-		transition: border-color 0.2s, opacity 0.2s;
+		border: 2px solid transparent;
+		padding: 0;
+		cursor: pointer;
+		background: #eee;
+		transition: border-color 0.2s, transform 0.2s;
+		flex-shrink: 0;
 		display: block;
-		width: 100%;
 	}
+
 	.gallery-thumb-btn:hover {
-		opacity: 0.85;
+		transform: scale(1.05);
 	}
+
 	.gallery-thumb-btn.active {
 		border-color: var(--color-primary);
+		box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb, 10, 40, 90), 0.3);
 	}
-	.gallery-image {
+
+	.gallery-thumb-img {
 		width: 100%;
-		height: 90px;
+		height: 100%;
 		object-fit: cover;
 		display: block;
+	}
+
+	.main-price-tag {
+		position: absolute;
+		top: 20px;
+		left: 20px;
+		background: rgba(0, 0, 0, 0.82);
+		color: white;
+		padding: 8px 16px;
+		border-radius: 8px;
+		font-weight: 700;
+		font-size: 1.2rem;
+		backdrop-filter: blur(6px);
+		max-width: calc(100% - 40px);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		z-index: 5;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 	}
 	.details-info-bar {
 		display: grid;
@@ -992,12 +1033,11 @@
 		.main-image-container {
 			height: 260px;
 		}
-		.gallery-grid {
-			grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
-			gap: 0.5rem;
-		}
-		.gallery-image {
-			height: 65px;
+		.main-price-tag {
+			font-size: 1rem;
+			padding: 6px 12px;
+			top: 12px;
+			left: 12px;
 		}
 		.details-info-bar {
 			grid-template-columns: repeat(2, 1fr);
