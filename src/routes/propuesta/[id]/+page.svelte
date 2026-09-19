@@ -983,17 +983,22 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		margin-top: 10px;
+		margin-top: 12px;
 		margin-bottom: 0;
+		width: 100%;
+		max-width: 100%;
+		min-width: 0;
 		overflow-x: auto;
-		padding-bottom: 10px;
+		overflow-y: hidden;
+		padding: 4px 2px 14px;
 		scrollbar-width: thin;
 		scrollbar-color: #8c8c8c #e2e8f0;
 		-webkit-overflow-scrolling: touch;
+		box-sizing: border-box;
 	}
 
 	.anchor-thumbnails-strip::-webkit-scrollbar {
-		height: 8px;
+		height: 10px;
 		background: #e2e8f0;
 		border-radius: 6px;
 	}
@@ -1013,8 +1018,10 @@
 	}
 
 	.anchor-thumb-btn {
-		width: 82px;
-		height: 58px;
+		width: 90px;
+		min-width: 90px;
+		height: 64px;
+		min-height: 64px;
 		border-radius: 8px;
 		overflow: hidden;
 		border: 2px solid transparent;
@@ -1023,6 +1030,8 @@
 		background: #eee;
 		transition: border-color 0.2s, transform 0.2s;
 		flex-shrink: 0;
+		display: block;
+		box-sizing: border-box;
 	}
 
 	.anchor-thumb-btn:hover {
