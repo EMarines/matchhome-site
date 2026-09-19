@@ -1,21 +1,44 @@
 <script>
 	import { page } from '$app/stores';
+	import { onDestroy } from 'svelte';
 
 	export let searchValue = '';
 	export let onSearch;
 
 	let inputValue = searchValue;
+	let debounceTimer;
 
 	$: inputValue = searchValue;
 
 	function handleChange(e) {
 		inputValue = e.target.value;
-		if (onSearch) onSearch(inputValue);
+		clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(() => {
+			if (onSearch) onSearch(inputValue);
+		}, 300);
+	}
+
+	function handleKeyDown(e) {
+		if (e.key === 'Enter') {
+			clearTimeout(debounceTimer);
+			if (onSearch) onSearch(inputValue);
+		}
 	}
 
 	function handleButtonClick() {
+		clearTimeout(debounceTimer);
 		if (onSearch) onSearch(inputValue);
 	}
+
+	function clearSearch() {
+		inputValue = '';
+		clearTimeout(debounceTimer);
+		if (onSearch) onSearch('');
+	}
+
+	onDestroy(() => {
+		clearTimeout(debounceTimer);
+	});
 </script>
 
 <section class="hero">
@@ -28,14 +51,21 @@
 		<p class="hero-subtitle">Las mejores propiedades en exclusiva para ti en Chihuahua</p>
 
 		<div class="search-bar">
-			<input
-				type="text"
-				placeholder="Buscar por ubicación, tipo de propiedad..."
-				class="search-input"
-				value={inputValue}
-				on:input={handleChange}
-			/>
-			<button class="btn btn-secondary search-btn" on:click={handleButtonClick}>Buscar</button>
+			<div class="search-input-wrapper">
+				<span class="search-icon">🔍</span>
+				<input
+					type="text"
+					placeholder="Buscar por colonia, zona, clave o tipo de propiedad..."
+					class="search-input"
+					value={inputValue}
+					on:input={handleChange}
+					on:keydown={handleKeyDown}
+				/>
+				{#if inputValue}
+					<button type="button" class="clear-search-btn" on:click={clearSearch} aria-label="Borrar búsqueda">✕</button>
+				{/if}
+			</div>
+			<button type="button" class="btn btn-secondary search-btn" on:click={handleButtonClick}>Buscar</button>
 		</div>
 	</div>
 </section>
@@ -45,7 +75,7 @@
 		background-image: url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
 		background-size: cover;
 		background-position: center;
-		height: 600px;
+		height: 520px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -58,14 +88,14 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(0, 0, 0, 0.3);
+		background: rgba(10, 25, 47, 0.45);
 	}
 	.hero-content {
 		position: relative;
 		z-index: 1;
 		text-align: center;
 		width: 100%;
-		max-width: 800px;
+		max-width: 820px;
 		padding: 0 var(--spacing-md);
 	}
 	.hero-slogan-tag {
@@ -85,34 +115,72 @@
 		letter-spacing: 0.5px;
 	}
 	.hero-title {
-		font-size: 3.5rem;
-		font-weight: 700;
-		margin-bottom: var(--spacing-md);
-		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+		font-size: 3.2rem;
+		font-weight: 800;
+		margin-bottom: var(--spacing-sm);
+		text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+		letter-spacing: -0.5px;
 	}
 	.hero-subtitle {
 		font-size: var(--font-size-xl);
-		margin-bottom: var(--spacing-2xl);
+		margin-bottom: 1.75rem;
 		opacity: 0.95;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 	}
 	.search-bar {
-		background: var(--color-white);
-		padding: var(--spacing-sm);
-		border-radius: 8px;
+		background: #ffffff;
+		padding: 0.45rem;
+		border-radius: 12px;
 		display: flex;
-		gap: var(--spacing-sm);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		gap: 0.5rem;
+		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+		align-items: center;
+	}
+	.search-input-wrapper {
+		display: flex;
+		align-items: center;
+		flex: 1;
+		padding-left: 0.75rem;
+		position: relative;
+	}
+	.search-icon {
+		font-size: 1.1rem;
+		color: #718096;
+		margin-right: 0.5rem;
 	}
 	.search-input {
 		flex: 1;
 		border: none;
-		padding: var(--spacing-md);
-		font-size: var(--font-size-base);
+		padding: 0.75rem 0.5rem;
+		font-size: 1rem;
+		color: #2d3748;
 		outline: none;
+		background: transparent;
+	}
+	.clear-search-btn {
+		background: transparent;
+		border: none;
+		color: #a0aec0;
+		font-size: 0.9rem;
+		padding: 4px 8px;
+		cursor: pointer;
+		border-radius: 50%;
+		margin-right: 0.5rem;
+		transition: color 0.2s;
+	}
+	.clear-search-btn:hover {
+		color: #4a5568;
 	}
 	.search-btn {
-		padding: var(--spacing-md) var(--spacing-2xl);
+		padding: 0.85rem 2rem;
+		font-weight: 700;
+		border-radius: 8px;
+		font-size: 1rem;
+		box-shadow: 0 4px 12px rgba(197, 160, 89, 0.35);
+		transition: all 0.2s;
+	}
+	.search-btn:hover {
+		transform: translateY(-1px);
 	}
 
 	@media (max-width: 768px) {
@@ -134,17 +202,19 @@
 			padding: 0.75rem;
 			gap: 0.75rem;
 		}
+		.search-input-wrapper {
+			width: 100%;
+			border: 1px solid #e2e8f0;
+			border-radius: 8px;
+			padding-left: 0.5rem;
+		}
 		.search-input {
 			font-size: 16px; /* Previene auto-zoom en iOS Safari */
-			padding: 0.75rem;
-			border-radius: 6px;
-			border: 1px solid var(--color-border);
+			padding: 0.75rem 0.5rem;
 		}
 		.search-btn {
 			width: 100%;
 			padding: 0.85rem;
-			font-size: 1rem;
-			font-weight: 700;
 		}
 	}
 

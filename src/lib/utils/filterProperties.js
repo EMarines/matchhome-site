@@ -1,151 +1,217 @@
-export function filterProperties(inventoryData, search, filters, page = 1, limit = 20) {
-  const term = search.toLowerCase();
-  
-  const filtered = inventoryData.filter(p => {
-    const title = (p.titulo || p.title || '').toLowerCase();
+/**
+ * Motor de filtrado y búsqueda robusto para MatchHome
+ * Normaliza acentos, soporta esquemas híbridos (EasyBroker, Firestore ATAIR, JSON local),
+ * mapeo bilingüe de tipos de propiedad, zonas geográficas y amenidades.
+ */
+
+function normalizeText(text) {
+  if (text === null || text === undefined) return '';
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Quita acentos
+    .trim();
+}
+
+function parseNumber(val, defaultVal = 0) {
+  if (val === null || val === undefined || val === '') return defaultVal;
+  if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
+  const cleaned = String(val).replace(/[^0-9.-]+/g, '');
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? defaultVal : parsed;
+}
+
+function getOpTypeNormalized(val) {
+  if (!val) return '';
+  const t = normalizeText(val);
+  if (t === 'sale' || t === 'venta') return 'venta';
+  if (t === 'rent' || t === 'rental' || t === 'renta' || t === 'alquiler') return 'renta';
+  return t;
+}
+
+// Mapeo bilingüe y de variantes para tipos de propiedad
+const PROPERTY_TYPE_SYNONYMS = {
+  casa: ['casa', 'house', 'residencia', 'villa'],
+  'casa en condominio': ['casa en condominio', 'condominio', 'condo'],
+  departamento: ['departamento', 'depto', 'apartment', 'flat', 'penthouse', 'loft', 'estudio'],
+  terreno: ['terreno', 'land', 'lote', 'solar'],
+  'local comercial': ['local', 'comercial', 'commercial', 'retail', 'local comercial'],
+  'local en centro comercial': ['local en centro comercial', 'mall', 'centro comercial'],
+  'bodega comercial': ['bodega', 'warehouse', 'industrial', 'nave', 'bodega comercial'],
+  'casa con uso de suelo': ['casa con uso de suelo', 'uso de suelo'],
+  edificio: ['edificio', 'building'],
+  oficina: ['oficina', 'office'],
+  quinta: ['quinta', 'villa', 'rancho', 'finca'],
+  rancho: ['rancho', 'ranch', 'hacienda'],
+  huerta: ['huerta', 'orchard'],
+  villa: ['villa', 'quinta']
+};
+
+export function filterProperties(inventoryData = [], search = '', filters = {}, page = 1, limit = 20) {
+  const term = normalizeText(search);
+
+  const filtered = inventoryData.filter((p) => {
+    if (!p) return false;
+
+    // --- 1. Extracción de textos para búsqueda libre ---
+    const title = normalizeText(p.titulo || p.title || '');
+    const desc = normalizeText(p.descripcion || p.description || '');
+    const id = normalizeText(p.easybroker_id || p.public_id || p.id || p.internal_id || p.clave || '');
+    
     const locationObj = p.location || {};
-    const locationName = typeof p.location === 'object' 
-      ? [locationObj.name, locationObj.city, locationObj.region, locationObj.city_area].filter(Boolean).join(' ') 
-      : (p.colonia || p.ubicacion || p.location || '');
-    const location = locationName.toLowerCase();
-    const type = (p.selecTP || p.tipoPropiedad || p.property_type || '').toLowerCase();
-    const id = (p.easybroker_id || p.public_id || p.id || '').toLowerCase();
-    const matchesText = !term || title.includes(term) || location.includes(term) || type.includes(term) || id.includes(term);
+    const locParts = typeof p.location === 'object'
+      ? [locationObj.name, locationObj.city, locationObj.region, locationObj.city_area, locationObj.street]
+      : [p.colonia, p.ubicacion, p.location];
+    const locationText = normalizeText(locParts.filter(Boolean).join(' '));
+    const coloniaText = normalizeText(p.colonia || '');
+    const typeRaw = p.selecTP || p.tipoPropiedad || p.property_type || '';
+    const typeText = normalizeText(typeRaw);
 
-    const beds = p.recamaras ?? p.bedrooms ?? 0;
-    const baths = p.banos ?? p.bathrooms ?? 0;
-    const parking = p.estacionamientos ?? p.parking_spaces ?? 0;
+    const matchesText = !term || 
+      title.includes(term) || 
+      locationText.includes(term) || 
+      coloniaText.includes(term) || 
+      typeText.includes(term) || 
+      id.includes(term) ||
+      desc.includes(term);
 
-    const matchesBedrooms = !filters.bedrooms || (beds >= parseInt(filters.bedrooms));
-    const matchesBathrooms = !filters.bathrooms || (baths >= parseInt(filters.bathrooms));
-    const matchesParking = !filters.parking || (parking >= parseInt(filters.parking));
+    if (!matchesText) return false;
 
-    // Price & Operation Filter
-    const min = filters.minPrice ? parseFloat(filters.minPrice) : 0;
-    const max = filters.maxPrice ? parseFloat(filters.maxPrice) : Infinity;
+    // --- 2. Recámaras, Baños, Estacionamientos ---
+    const beds = parseNumber(p.recamaras ?? p.bedrooms);
+    const baths = parseNumber(p.banos ?? p.bathrooms);
+    const parking = parseNumber(p.estacionamientos ?? p.parking_spaces);
+
+    const filterBeds = parseNumber(filters.bedrooms, 0);
+    const filterBaths = parseNumber(filters.bathrooms, 0);
+    const filterParking = parseNumber(filters.parking, 0);
+
+    if (filterBeds > 0 && beds < filterBeds) return false;
+    if (filterBaths > 0 && baths < filterBaths) return false;
+    if (filterParking > 0 && parking < filterParking) return false;
+
+    // --- 3. Tipo de Operación y Rango de Precios ---
+    const minPrice = filters.minPrice ? parseNumber(filters.minPrice, 0) : 0;
+    const maxPrice = filters.maxPrice ? parseNumber(filters.maxPrice, Infinity) : Infinity;
+
+    const operations = Array.isArray(p.operaciones) ? p.operaciones : (Array.isArray(p.operations) ? p.operations : []);
+    const targetOp = filters.operationType ? getOpTypeNormalized(filters.operationType) : '';
+
+    let matchesOp = true;
     let matchesPrice = false;
-    let matchesOperationType = false;
 
-    const operations = p.operaciones || p.operations;
-    const priceVal = p.price ?? p.precio ?? p.budget ?? (operations && operations[0] ? operations[0].amount : 0);
-
-    const getOpType = (val) => {
-      if (!val) return '';
-      const t = String(val).toLowerCase().trim();
-      if (t === 'sale' || t === 'venta') return 'venta';
-      if (t === 'rent' || t === 'rental' || t === 'renta') return 'renta';
-      return t;
-    };
-
-    const opTypeVal = getOpType(p.selecTO || p.tipoOperacion || p.operation_type || (operations && operations[0] ? operations[0].type : ''));
-
-    if (operations && operations.length > 0) {
-      if (filters.operationType) {
-        const targetOp = getOpType(filters.operationType);
-        const op = operations.find(o => getOpType(o.type) === targetOp);
-        if (op) {
-          matchesOperationType = true;
-          const price = op.amount || p.price || p.precio || 0;
-          matchesPrice = (price >= min && price <= max);
+    if (operations.length > 0) {
+      if (targetOp) {
+        const matchingOp = operations.find((o) => getOpTypeNormalized(o.type) === targetOp);
+        if (!matchingOp) {
+          matchesOp = false;
+        } else {
+          const amt = parseNumber(matchingOp.amount ?? p.price ?? p.precio);
+          matchesPrice = amt >= minPrice && amt <= maxPrice;
         }
       } else {
-        matchesOperationType = true;
-        matchesPrice = operations.some(op => {
-          const price = op.amount || p.price || p.precio || 0;
-          return price >= min && price <= max;
+        // Si no hay filtro de operación, checamos si alguna operación cumple el rango de precio
+        matchesPrice = operations.some((o) => {
+          const amt = parseNumber(o.amount ?? p.price ?? p.precio);
+          return amt >= minPrice && amt <= maxPrice;
         });
       }
     } else {
-      if (filters.operationType) {
-        const targetOp = getOpType(filters.operationType);
-        matchesOperationType = (opTypeVal === targetOp || opTypeVal.includes(targetOp));
-      } else {
-        matchesOperationType = true;
+      // Propiedad sin arreglo operations: usar campos directos
+      const directOp = getOpTypeNormalized(p.selecTO || p.tipoOperacion || p.operation_type || '');
+      if (targetOp && directOp && !directOp.includes(targetOp) && !targetOp.includes(directOp)) {
+        matchesOp = false;
       }
-      matchesPrice = (priceVal >= min && priceVal <= max);
+      const directPrice = parseNumber(p.price ?? p.precio ?? p.budget ?? 0);
+      matchesPrice = directPrice >= minPrice && directPrice <= maxPrice;
     }
 
-    // Property Type Filter (Case Insensitive)
-    const propTypeStr = p.selecTP || p.tipoPropiedad || p.property_type || '';
-    const matchesPropertyType = !filters.propertyType || 
-      (propTypeStr && propTypeStr.toLowerCase().includes(filters.propertyType.toLowerCase()));
+    if (!matchesOp || !matchesPrice) return false;
 
-    // Tags Filter
-    const normalizeText = (text) => {
-      if (!text) return '';
-      return text.toString()
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // Remove accents
-        .trim();
-    };
-
-    // Use ONLY the tags array from the property object as requested
-    const propertyTags = (p.tags || []).map(normalizeText);
-    
-    const selectedTags = (filters.tags || []).map(normalizeText);
-    
-    // Define Zones to separate logic
-    // Add variations just in case normalization produces them (e.g. "centro norte")
-    const KNOWN_ZONES = ['norte', 'sur', 'este', 'oeste', 'centronorte', 'centrosur', 'centro norte', 'centro sur'];
-    
-    const selectedZones = selectedTags.filter(t => KNOWN_ZONES.includes(t));
-    const selectedAmenities = selectedTags.filter(t => !KNOWN_ZONES.includes(t));
-    
-    // Logic:
-    // 1. Zones: OR (If any zone is selected, property must match AT LEAST ONE of them)
-    // 2. Amenities: AND (If any amenity is selected, property must match ALL of them)
-    
-    const matchesZones = selectedZones.length === 0 || 
-      selectedZones.some(zone => propertyTags.some(pt => pt.includes(zone)));
+    // --- 4. Tipo de Propiedad ---
+    if (filters.propertyType && filters.propertyType !== '' && filters.propertyType !== '0') {
+      const targetTypeNorm = normalizeText(filters.propertyType);
+      const synonyms = PROPERTY_TYPE_SYNONYMS[targetTypeNorm] || [targetTypeNorm];
       
-    const matchesAmenities = selectedAmenities.length === 0 ||
-      selectedAmenities.every(amenity => propertyTags.some(pt => pt.includes(amenity)));
-      
-    const matchesTags = matchesZones && matchesAmenities;
-
-    // Debug logging for the first few items
-    if (inventoryData.indexOf(p) < 3 && selectedTags.length > 0) {
-       console.group(`Checking property ${p.public_id}`);
-       console.log('Data:', { 
-         title, 
-         type: p.property_type, 
-         operations: p.operations,
-         bedrooms: p.bedrooms,
-         price: p.operations?.[0]?.amount,
-         tags: p.tags,
-         features: p.features
-       });
-       console.log('Property Tags (normalized):', propertyTags);
-       console.log('Selected Zones:', selectedZones);
-       console.log('Selected Amenities:', selectedAmenities);
-       console.log('Filters:', filters);
-       console.log('Matches:', { 
-         matchesText, 
-         matchesBedrooms, 
-         matchesPrice, 
-         matchesOperationType,
-         matchesPropertyType,
-         matchesTags 
-       });
-       console.groupEnd();
+      const propTypeCombined = `${typeText} ${title}`;
+      const typeMatches = synonyms.some((syn) => propTypeCombined.includes(syn));
+      if (!typeMatches) return false;
     }
 
-    return matchesText && matchesBedrooms && matchesBathrooms && matchesParking && matchesPrice && matchesPropertyType && matchesOperationType && matchesTags;
+    // --- 5. Zonas y Amenidades (Tags / Features / LocaProperty) ---
+    const selectedTags = (filters.tags || []).map(normalizeText).filter(Boolean);
+
+    if (selectedTags.length > 0) {
+      const KNOWN_ZONES = ['norte', 'sur', 'este', 'oeste', 'centronorte', 'centrosur', 'centro norte', 'centro sur', 'centro'];
+      const selectedZones = selectedTags.filter((t) => KNOWN_ZONES.includes(t));
+      const selectedAmenities = selectedTags.filter((t) => !KNOWN_ZONES.includes(t));
+
+      // Extraer todas las señales de zona de la propiedad
+      const propertyZoneSignals = [
+        p.locaProperty,
+        p.zona,
+        p.colonia,
+        locationText,
+        title,
+        ...(Array.isArray(p.tags) ? p.tags : [])
+      ]
+        .filter(Boolean)
+        .map(normalizeText);
+
+      // Extraer todas las señales de amenidades
+      const featureList = Array.isArray(p.features)
+        ? p.features.map((f) => (typeof f === 'object' && f ? f.name : f)).filter(Boolean)
+        : [];
+      const propertyAmenitySignals = [
+        ...featureList,
+        ...(Array.isArray(p.tags) ? p.tags : []),
+        desc,
+        title
+      ]
+        .filter(Boolean)
+        .map(normalizeText);
+
+      // Zonas: OR (Debe coincidir con al menos una de las zonas seleccionadas)
+      if (selectedZones.length > 0) {
+        const matchesAnyZone = selectedZones.some((zone) => {
+          const compactZone = zone.replace(/\s+/g, '');
+          return propertyZoneSignals.some((sig) => {
+            const compactSig = sig.replace(/\s+/g, '');
+            return sig.includes(zone) || compactSig.includes(compactZone);
+          });
+        });
+        if (!matchesAnyZone) return false;
+      }
+
+      // Amenidades: AND (Debe contener todas las amenidades seleccionadas)
+      if (selectedAmenities.length > 0) {
+        const matchesAllAmenities = selectedAmenities.every((amenity) => {
+          return propertyAmenitySignals.some((sig) => sig.includes(amenity));
+        });
+        if (!matchesAllAmenities) return false;
+      }
+    }
+
+    return true;
   });
 
   const total = filtered.length;
-  const start = (page - 1) * limit;
-  const end = start + limit;
+  const parsedLimit = parseNumber(limit, 20);
+  const parsedPage = Math.max(1, parseNumber(page, 1));
+  const start = (parsedPage - 1) * parsedLimit;
+  const end = start + parsedLimit;
   const items = filtered.slice(start, end);
 
   return {
     items,
     pagination: {
-      limit,
+      limit: parsedLimit,
       total,
-      page,
-      next_page: end < total ? true : null
+      page: parsedPage,
+      total_pages: Math.ceil(total / parsedLimit) || 1,
+      next_page: end < total ? parsedPage + 1 : null,
+      prev_page: parsedPage > 1 ? parsedPage - 1 : null
     }
   };
 }

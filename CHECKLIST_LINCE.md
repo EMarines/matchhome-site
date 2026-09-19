@@ -17,9 +17,9 @@
   - *Archivo:* `src/lib/components/PropertyCard.svelte`
   - *Objetivo:* Agregar `loading="lazy"`, `decoding="async"` y fijar `aspect-ratio: 16/10` con contenedor placeholder para evitar saltos en pantalla.
 
-- [ ] **🔹 Tarea 4: Selector Dinámico de Paginación (20 / 50 / 100)**
-  - *Archivos:* `src/lib/utils/filterProperties.js`, `src/routes/+page.svelte`, `src/routes/propiedades/+page.svelte`
-  - *Objetivo:* Permitir alternar entre 20, 50 y 100 propiedades por página, sincronizándolo con la URL (`?limit=50`).
+- [x] **🔹 Tarea 4: Motor de Filtros Robustecido, Botón Ocultable y Paginación Dinámica (12 / 24 / 48 / 96)**
+  - *Archivos:* `src/lib/utils/filterProperties.js`, `src/lib/components/Filters.svelte`, `src/lib/components/Hero.svelte`, `src/routes/+page.svelte`, `src/routes/propiedades/+page.svelte`
+  - *Objetivo:* Botón prominente `⚡ Filtrar Propiedades` con badge de filtros activos, filtros ocultos por defecto, normalización NFD de texto y acentos, compatibilidad con EasyBroker/Firestore (zonas en `locaProperty`/`location`, amenidades en `features`, tipos bilingües y sanitización de precios), píldoras activas con remoción rápida y paginación reactiva sincronizada con URL.
 
 - [ ] **🔹 Tarea 5: Buscador del Hero con Selector Venta/Renta y Zonas de Chihuahua**
   - *Archivo:* `src/lib/components/Hero.svelte`
