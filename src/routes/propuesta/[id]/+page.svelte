@@ -6,7 +6,8 @@
 	import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 	export let data;
-	$: ({ anchorProperty, similarProperties, clientName, clientPhone, contact: serverContact, contactId: serverContactId } = data);
+	$: ({ anchorProperty, similarProperties, clientName, clientPhone, contact: serverContact, contactId: serverContactId, isExistingContact } = data);
+
 
 	let loadedContact = null;
 	let contactLoading = false;
@@ -570,11 +571,23 @@
 		<!-- Section 3: Similar Properties -->
 		{#if similarProperties.length > 0}
 			<section class="similar-section">
-				<div class="section-header">
-					<h2>Otras Oportunidades para Ti</h2>
-					<p>Propiedades similares que podrían interesarte</p>
-					<div class="divider"></div>
-				</div>
+			<div class="section-header">
+				<h2>
+					{#if isExistingContact}
+						Propiedades que coinciden con lo que buscas
+					{:else}
+						Otras Oportunidades para Ti
+					{/if}
+				</h2>
+				<p>
+					{#if isExistingContact}
+						Selección basada en tus preferencias y requerimientos registrados
+					{:else}
+						Propiedades similares que podrían interesarte
+					{/if}
+				</p>
+				<div class="divider"></div>
+			</div>
 
 				<div class="properties-grid">
 					{#each similarProperties as property (property.public_id)}

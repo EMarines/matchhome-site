@@ -2,8 +2,34 @@ import { json } from '@sveltejs/kit';
 import nodemailer from 'nodemailer';
 import { env } from '$env/dynamic/private';
 
-export async function POST({ request, locals }) {
+// ── Rate limiting en memoria (se resetea con cada deploy — aceptable en Vercel) ─
+const rateLimitMap = new Map();
+const RATE_LIMIT = 5;       // máx envíos por ventana
+const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hora
+
+export async function POST({ request, locals, getClientAddress }) {
+  // ── Verificar rate limit ──────────────────────────────────────────────────────
+  let clientIp = 'unknown';
+  try { clientIp = getClientAddress(); } catch { /* en entornos sin IP disponible */ }
+
+  const now = Date.now();
+  const rateEntry = rateLimitMap.get(clientIp) || { count: 0, resetAt: now + RATE_WINDOW_MS };
+  if (now > rateEntry.resetAt) {
+    rateEntry.count = 0;
+    rateEntry.resetAt = now + RATE_WINDOW_MS;
+  }
+  if (rateEntry.count >= RATE_LIMIT) {
+    return json(
+      { success: false, error: 'Demasiadas solicitudes. Por favor intenta más tarde.' },
+      { status: 429 }
+    );
+  }
+  rateEntry.count++;
+  rateLimitMap.set(clientIp, rateEntry);
+  // ─────────────────────────────────────────────────────────────────────────────
+
   try {
+
     const data = await request.json();
     const { name, email, phone, message, propertyId, propertyTitle, pageUrl } = data;
 
