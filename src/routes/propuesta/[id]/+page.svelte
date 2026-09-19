@@ -465,7 +465,7 @@
 
 					<div class="anchor-actions">
 						<a
-							href={`/property/${anchorPublicId}?backUrl=${encodeURIComponent(locationPath)}&fromProposal=true`}
+							href={`/property/${anchorPublicId}?backUrl=${encodeURIComponent(locationPath)}&fromProposal=true${contactId ? `&c=${encodeURIComponent(contactId)}` : ''}${displayName && displayName !== 'Cliente' ? `&cliente=${encodeURIComponent(displayName)}` : ''}${formPhone || clientPhone ? `&tel=${encodeURIComponent(formPhone || clientPhone)}` : ''}`}
 							class="btn btn-secondary full-width"
 						>
 							Ver Detalles y Más Fotos
@@ -631,7 +631,14 @@
 
 				<div class="properties-grid">
 					{#each similarProperties as property (property.public_id)}
-						<PropertyCard {property} backUrl={locationPath} fromProposal={true} />
+						<PropertyCard 
+							{property} 
+							backUrl={locationPath} 
+							fromProposal={true} 
+							{contactId}
+							clientName={displayName}
+							clientPhone={formPhone || clientPhone}
+						/>
 					{/each}
 				</div>
 			</section>

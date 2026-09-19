@@ -3,9 +3,92 @@ import { serializeFirestoreData } from '$lib/utils/serializeFirestore';
 import inventoryData from '$lib/data/inventory.json';
 import { mockProperties } from '$lib/data/mockProperties';
 
-export async function load({ params, locals }) {
+export async function load({ params, url, locals }) {
   const { id } = params;
   const db = locals.db;
+
+  // ── Extraer parámetros de contacto (directos o desde backUrl) ─────────────
+  let contactId = url.searchParams.get('c') || '';
+  let clientName =
+    url.searchParams.get('cliente') ||
+    url.searchParams.get('nombre') ||
+    url.searchParams.get('name') ||
+    url.searchParams.get('first_name') ||
+    url.searchParams.get('firstName') ||
+    '';
+  let clientPhone =
+    url.searchParams.get('tel') ||
+    url.searchParams.get('telefono') ||
+    url.searchParams.get('phone') ||
+    url.searchParams.get('celular') ||
+    '';
+  let clientEmail =
+    url.searchParams.get('email') ||
+    url.searchParams.get('correo') ||
+    '';
+
+  // Si no vinieron directos, intentar extraer de backUrl (ej. navegación desde /propuesta/[id])
+  const backUrl = url.searchParams.get('backUrl');
+  if (backUrl) {
+    try {
+      const parsedBack = new URL(backUrl, 'https://matchhome.vercel.app');
+      if (!contactId) contactId = parsedBack.searchParams.get('c') || '';
+      if (!clientName) {
+        clientName =
+          parsedBack.searchParams.get('cliente') ||
+          parsedBack.searchParams.get('nombre') ||
+          parsedBack.searchParams.get('name') ||
+          '';
+      }
+      if (!clientPhone) {
+        clientPhone =
+          parsedBack.searchParams.get('tel') ||
+          parsedBack.searchParams.get('telefono') ||
+          parsedBack.searchParams.get('phone') ||
+          '';
+      }
+      if (!clientEmail) {
+        clientEmail =
+          parsedBack.searchParams.get('email') ||
+          parsedBack.searchParams.get('correo') ||
+          '';
+      }
+    } catch (e) {
+      // Ignorar error de parsing
+    }
+  }
+
+  // Si 'c' contiene espacios o caracteres de nombre, usarlo como clientName
+  if (!clientName && contactId && (contactId.includes(' ') || contactId.includes('%20'))) {
+    clientName = decodeURIComponent(contactId).trim();
+  }
+
+  // Si contactId es un ID de Firestore y db está disponible, consultar documento
+  if (contactId && db && !contactId.includes(' ')) {
+    try {
+      const contactDoc = await db.collection('contacts').doc(contactId).get();
+      if (contactDoc.exists) {
+        const cData = contactDoc.data();
+        const fetchedName =
+          (cData.name && cData.lastname ? `${cData.name} ${cData.lastname}`.trim() : null) ||
+          cData.name ||
+          cData.nombre ||
+          cData.fullName ||
+          cData.nombreCompleto;
+        if (fetchedName) clientName = fetchedName;
+        if (!clientPhone) {
+          clientPhone = cData.phone || cData.telefono || cData.telephon || cData.celular || '';
+        }
+        if (!clientEmail) {
+          clientEmail = cData.email || cData.correo || '';
+        }
+      } else if (!clientName) {
+        clientName = contactId;
+      }
+    } catch (err) {
+      console.error('Error fetching contact in property detail page:', err);
+    }
+  }
 
   const localProp =
     inventoryData.find(
@@ -51,7 +134,11 @@ export async function load({ params, locals }) {
             null
         };
         return {
-          property: serializeFirestoreData(mergedProperty)
+          property: serializeFirestoreData(mergedProperty),
+          clientName,
+          clientPhone,
+          clientEmail,
+          contactId
         };
       }
     } catch (e) {
@@ -61,7 +148,11 @@ export async function load({ params, locals }) {
 
   if (localProp) {
     return {
-      property: serializeFirestoreData(localProp)
+      property: serializeFirestoreData(localProp),
+      clientName,
+      clientPhone,
+      clientEmail,
+      contactId
     };
   }
 

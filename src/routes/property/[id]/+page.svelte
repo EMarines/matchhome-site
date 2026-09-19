@@ -3,6 +3,7 @@
 
 	export let data;
 	$: property = data.property;
+	$: ({ clientName: serverClientName, clientPhone: serverClientPhone, clientEmail: serverClientEmail } = data || {});
 
 	const NO_IMAGE_PLACEHOLDER =
 		'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22400%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A20pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22400%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22130%22%20y%3D%22158%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
@@ -138,6 +139,72 @@
 	let submittingForm = false;
 	let formSubmitted = false;
 	let formError = null;
+
+	// Extraer parámetros de contacto reactivamente desde la URL actual o desde backUrl
+	$: urlClientName = (() => {
+		const sp = $page.url.searchParams;
+		let n = sp.get('cliente') || sp.get('nombre') || sp.get('name') || '';
+		let c = sp.get('c') || '';
+		if (!n && c && (c.includes(' ') || c.includes('%20'))) {
+			n = decodeURIComponent(c).trim();
+		}
+		if (!n) {
+			const back = sp.get('backUrl');
+			if (back) {
+				try {
+					const dummy = new URL(back, 'https://matchhome.vercel.app');
+					const backC = dummy.searchParams.get('c');
+					if (backC && (backC.includes(' ') || backC.includes('%20'))) {
+						n = decodeURIComponent(backC).trim();
+					} else {
+						n = dummy.searchParams.get('cliente') || dummy.searchParams.get('nombre') || '';
+					}
+				} catch (e) {}
+			}
+		}
+		return n;
+	})();
+
+	$: urlClientPhone = (() => {
+		const sp = $page.url.searchParams;
+		let p = sp.get('tel') || sp.get('telefono') || sp.get('phone') || '';
+		if (!p) {
+			const back = sp.get('backUrl');
+			if (back) {
+				try {
+					const dummy = new URL(back, 'https://matchhome.vercel.app');
+					p = dummy.searchParams.get('tel') || dummy.searchParams.get('telefono') || '';
+				} catch (e) {}
+			}
+		}
+		return p;
+	})();
+
+	$: urlClientEmail = (() => {
+		const sp = $page.url.searchParams;
+		let em = sp.get('email') || sp.get('correo') || '';
+		if (!em) {
+			const back = sp.get('backUrl');
+			if (back) {
+				try {
+					const dummy = new URL(back, 'https://matchhome.vercel.app');
+					em = dummy.searchParams.get('email') || dummy.searchParams.get('correo') || '';
+				} catch (e) {}
+			}
+		}
+		return em;
+	})();
+
+	// Prellenar reactivamente los campos del formulario si están vacíos
+	$: if (!contactName && (serverClientName || urlClientName)) {
+		contactName = serverClientName || urlClientName;
+	}
+	$: if (!contactPhone && (serverClientPhone || urlClientPhone)) {
+		contactPhone = serverClientPhone || urlClientPhone;
+	}
+	$: if (!contactEmail && (serverClientEmail || urlClientEmail)) {
+		contactEmail = serverClientEmail || urlClientEmail;
+	}
 
 	async function handleContactSubmit() {
 		submittingForm = true;
@@ -275,8 +342,9 @@
 	});
 
 	$: propertyId = property?.public_id || property?.easybroker_id || property?.id || property?.clavePropiedad || '';
+	$: hasPersonalName = contactName && contactName !== 'Cliente' && contactName.trim().length > 0;
 	$: whatsappText = encodeURIComponent(
-		`Hola MatchHome, me interesa la propiedad ${propertyId ? `[${propertyId}] ` : ''}"${title}" (${price}). Me interesa esta propiedad, me puedes contactar.`
+		`Hola MatchHome${hasPersonalName ? `, soy ${contactName}` : ''}, me interesa la propiedad ${propertyId ? `[${propertyId}] ` : ''}"${title}" (${price}). Me interesa esta propiedad, me puedes contactar.`
 	);
 	$: whatsappUrl = `https://wa.me/526145404003?text=${whatsappText}`;
 </script>
@@ -477,7 +545,7 @@
 					</div>
 					{#if formSubmitted}
 						<div class="success-alert">
-							✅ ¡Gracias! Hemos recibido tu mensaje y se ha enviado a nuestro equipo. Te contactaremos pronto.
+							✅ ¡Gracias{contactName ? ` ${contactName}` : ''}! Hemos recibido tu mensaje y se ha enviado a nuestro equipo. Te contactaremos pronto.
 						</div>
 					{:else}
 						{#if formError}
@@ -485,13 +553,18 @@
 								⚠️ {formError}
 							</div>
 						{/if}
+						{#if fromProposal && contactName}
+							<div class="proposal-context-note">
+								💡 <strong>{contactName}</strong>, compártenos qué te pareció esta propiedad complementaria:
+							</div>
+						{/if}
 						<form class="contact-form" on:submit|preventDefault={handleContactSubmit}>
 							<input type="text" placeholder="Nombre" bind:value={contactName} required class="form-input" />
-							<input type="email" placeholder="Correo electrónico" bind:value={contactEmail} required class="form-input" />
-							<input type="tel" placeholder="Teléfono / WhatsApp" bind:value={contactPhone} class="form-input" />
+							<input type="email" placeholder="Correo electrónico (opcional si dejas teléfono)" bind:value={contactEmail} required={!contactPhone} class="form-input" />
+							<input type="tel" placeholder="Teléfono / WhatsApp" bind:value={contactPhone} required={!contactEmail} class="form-input" />
 							<textarea placeholder="Me interesa esta propiedad, me puedes contactar" bind:value={contactMessage} class="form-input" rows="4"></textarea>
 							<button type="submit" class="btn btn-primary full-width" disabled={submittingForm}>
-								{submittingForm ? 'Enviando...' : 'Enviar Mensaje'}
+								{submittingForm ? 'Enviando...' : (fromProposal && contactName ? '💬 Enviar mi opinión' : 'Enviar Mensaje')}
 							</button>
 						</form>
 					{/if}
@@ -860,6 +933,16 @@
 		font-weight: 500;
 		font-size: 0.9rem;
 		margin-bottom: 0.8rem;
+	}
+	.proposal-context-note {
+		background: #f0f4ff;
+		border-left: 3px solid var(--color-primary, #0056b3);
+		padding: 0.75rem 1rem;
+		border-radius: 4px;
+		font-size: 0.95rem;
+		color: #222;
+		margin-bottom: var(--spacing-md);
+		line-height: 1.4;
 	}
 
 	/* Carousel Styles */

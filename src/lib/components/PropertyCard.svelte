@@ -2,6 +2,9 @@
 	export let property;
 	export let backUrl = null;
 	export let fromProposal = false;
+	export let contactId = '';
+	export let clientName = '';
+	export let clientPhone = '';
 
 	// Map EasyBroker and MatchHome CRM fields to our UI with high-resolution priority
 	$: image =
@@ -85,10 +88,21 @@
 			: property.tags?.length > 0
 			? property.tags
 			: (property.features || []).slice(0, 3).map((f) => (typeof f === 'string' ? f : f.name));
+	$: cardLink = (() => {
+		const base = `/property/${id}`;
+		const params = new URLSearchParams();
+		if (backUrl) params.set('backUrl', backUrl);
+		if (fromProposal) params.set('fromProposal', 'true');
+		if (contactId) params.set('c', contactId);
+		if (clientName && clientName !== 'Cliente') params.set('cliente', clientName);
+		if (clientPhone) params.set('tel', clientPhone);
+		const qs = params.toString();
+		return qs ? `${base}?${qs}` : base;
+	})();
 </script>
 
 <a 
-	href={`/property/${id}${backUrl ? `?backUrl=${encodeURIComponent(backUrl)}&fromProposal=${fromProposal}` : ''}`} 
+	href={cardLink} 
 	class="property-card-link"
 >
 	<div class="property-card">
