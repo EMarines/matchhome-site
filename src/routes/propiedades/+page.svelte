@@ -199,11 +199,11 @@
 
 			<div class="limit-selector">
 				<label for="pageLimit">Mostrar:</label>
-				<select id="pageLimit" value={limit} on:change={handleLimitChange}>
-					<option value="12">12</option>
-					<option value="24">24</option>
-					<option value="48">48</option>
-					<option value="96">96</option>
+				<select id="pageLimit" bind:value={limit} on:change={handleLimitChange}>
+					<option value={12}>12</option>
+					<option value={24}>24</option>
+					<option value={48}>48</option>
+					<option value={96}>96</option>
 				</select>
 			</div>
 		</div>
@@ -478,8 +478,11 @@
 		border-radius: 6px;
 		background: #ffffff;
 		font-size: 0.85rem;
-		color: #2d3748;
+		font-weight: 600;
+		color: #1a202c;
 		outline: none;
+		cursor: pointer;
+		min-width: 65px;
 	}
 
 	/* Píldoras de Filtros Activos */

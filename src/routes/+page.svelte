@@ -146,7 +146,25 @@
 	/>
 </svelte:head>
 
-<Hero onSearch={handleSearch} searchValue={search} />
+<Hero
+	onSearch={handleSearch}
+	searchValue={search}
+	operationType={filters.operationType}
+	onSelectOperation={(op) => {
+		filters = { ...filters, operationType: op };
+		currentPage = 1;
+		updateUrl();
+		const el = document.getElementById('catalogo-section');
+		if (el) el.scrollIntoView({ behavior: 'smooth' });
+	}}
+	onSelectZone={(zone) => {
+		search = zone;
+		currentPage = 1;
+		updateUrl();
+		const el = document.getElementById('catalogo-section');
+		if (el) el.scrollIntoView({ behavior: 'smooth' });
+	}}
+/>
 
 <section class="section container" id="catalogo-section">
 	<div class="catalog-header-area">
@@ -175,11 +193,11 @@
 
 			<div class="limit-selector">
 				<label for="pageLimit">Mostrar:</label>
-				<select id="pageLimit" value={limit} on:change={handleLimitChange}>
-					<option value="12">12</option>
-					<option value="24">24</option>
-					<option value="48">48</option>
-					<option value="96">96</option>
+				<select id="pageLimit" bind:value={limit} on:change={handleLimitChange}>
+					<option value={12}>12</option>
+					<option value={24}>24</option>
+					<option value={48}>48</option>
+					<option value={96}>96</option>
 				</select>
 			</div>
 		</div>
@@ -416,8 +434,11 @@
 		border-radius: 6px;
 		background: #ffffff;
 		font-size: 0.85rem;
-		color: #2d3748;
+		font-weight: 600;
+		color: #1a202c;
 		outline: none;
+		cursor: pointer;
+		min-width: 65px;
 	}
 
 	/* Barra de Píldoras de Filtros Activos */

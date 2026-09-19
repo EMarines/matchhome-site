@@ -3,12 +3,10 @@
 	export let backUrl = null;
 	export let fromProposal = false;
 
-	// Map EasyBroker and MatchHome CRM fields to our UI
+	// Map EasyBroker and MatchHome CRM fields to our UI with high-resolution priority
 	$: image =
 		property.imagenPrincipal ||
-		property.imagenMiniatura ||
 		property.title_image_full ||
-		property.title_image_thumb ||
 		(property.images && property.images.length > 0
 			? typeof property.images[0] === 'string'
 				? property.images[0]
@@ -17,6 +15,8 @@
 		(property.property_images &&
 			property.property_images.length > 0 &&
 			property.property_images[0]?.url) ||
+		property.title_image_thumb ||
+		property.imagenMiniatura ||
 		'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22400%22%20height%3D%22300%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20300%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_1%20text%20%7B%20fill%3A%23AAAAAA%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A20pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_1%22%3E%3Crect%20width%3D%22400%22%20height%3D%22300%22%20fill%3D%22%23EEEEEE%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22130%22%20y%3D%22158%22%3ENo%20Image%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E';
 
 	$: title = property.titulo || property.title || 'Propiedad sin título';
@@ -93,9 +93,11 @@
 >
 	<div class="property-card">
 		<div class="card-image-wrapper">
-			<img src={image} alt={title} class="card-image" />
+			<img src={image} alt={title} class="card-image" loading="lazy" decoding="async" />
 			<span class="card-status">{status}</span>
-			<span class="card-id">{id}</span>
+			{#if id}
+				<span class="card-id">{id}</span>
+			{/if}
 			<span class="card-price">{price}</span>
 		</div>
 		<div class="card-content">
@@ -133,32 +135,39 @@
 		background: var(--color-white);
 		border-radius: 8px;
 		overflow: hidden;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 		transition:
-			transform 0.2s,
-			box-shadow 0.2s;
+			transform 0.2s ease,
+			box-shadow 0.2s ease;
 		margin: 0;
 		width: 100%;
 		height: 100%;
 		display: flex;
 		flex-direction: column;
 		box-sizing: border-box;
+		border: 1px solid rgba(0, 0, 0, 0.05);
 	}
 	.property-card:hover {
 		transform: translateY(-4px);
-		box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
 	}
 	.card-image-wrapper {
 		position: relative;
 		height: 240px;
 		width: 100%;
+		aspect-ratio: 16 / 10;
 		overflow: hidden;
 		flex-shrink: 0;
+		background: #f1f5f9;
 	}
 	.card-image {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		transition: transform 0.3s ease;
+	}
+	.property-card:hover .card-image {
+		transform: scale(1.03);
 	}
 	.card-status {
 		position: absolute;
@@ -180,12 +189,13 @@
 		position: absolute;
 		top: 10px;
 		right: 10px;
-		background: rgba(0, 0, 0, 0.45);
+		background: rgba(0, 0, 0, 0.55);
 		color: #fff;
 		padding: 3px 8px;
 		border-radius: 4px;
-		font-size: 12px;
-		font-weight: 500;
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.5px;
 		z-index: 2;
 		max-width: calc(45% - 10px);
 		white-space: nowrap;
@@ -196,7 +206,7 @@
 		position: absolute;
 		bottom: 10px;
 		right: 10px;
-		background: rgba(0, 0, 0, 0.75);
+		background: rgba(0, 0, 0, 0.78);
 		color: var(--color-white);
 		padding: 5px 10px;
 		border-radius: 4px;
@@ -207,7 +217,7 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		backdrop-filter: blur(2px);
+		backdrop-filter: blur(4px);
 	}
 	.card-content {
 		padding: var(--spacing-md);
@@ -218,7 +228,7 @@
 		flex: 1;
 	}
 	.card-title {
-		font-size: 1.1rem;
+		font-size: 1.05rem;
 		margin-bottom: var(--spacing-xs);
 		color: var(--color-text-main);
 		line-height: 1.35;
@@ -261,6 +271,7 @@
 		text-align: center;
 		box-sizing: border-box;
 		margin-top: auto;
+		border-radius: 6px;
 	}
 	.card-tags {
 		display: flex;
@@ -269,15 +280,16 @@
 		margin-bottom: var(--spacing-md);
 	}
 	.card-tag {
-		background: #f0f0f0;
-		color: #666;
-		font-size: 10px;
-		padding: 2px 6px;
+		background: #f1f5f9;
+		color: #475569;
+		font-size: 11px;
+		padding: 3px 7px;
 		border-radius: 4px;
 		max-width: 100%;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		font-weight: 500;
 	}
 
 	@media (max-width: 480px) {

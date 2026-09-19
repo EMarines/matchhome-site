@@ -1,4 +1,5 @@
 import { serializeFirestoreData } from '$lib/utils/serializeFirestore';
+import { trimPropertyForCatalog } from '$lib/utils/trimPropertyPayload';
 import inventoryData from '$lib/data/inventory.json';
 
 export async function load({ locals }) {
@@ -8,9 +9,10 @@ export async function load({ locals }) {
     if (db) {
       const snapshot = await db.collection('properties').get();
       if (!snapshot.empty) {
-        const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const rawProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const trimmed = rawProperties.map(trimPropertyForCatalog).filter(Boolean);
         return {
-          properties: serializeFirestoreData(properties)
+          properties: serializeFirestoreData(trimmed)
         };
       }
     }
@@ -19,7 +21,8 @@ export async function load({ locals }) {
   }
 
   // Fallback to local inventory.json if Firestore fails or is empty
+  const localTrimmed = inventoryData.map(trimPropertyForCatalog).filter(Boolean);
   return {
-    properties: serializeFirestoreData(inventoryData)
+    properties: serializeFirestoreData(localTrimmed)
   };
 }

@@ -248,6 +248,12 @@
 
 	$: locationPath = $page.url.pathname + $page.url.search;
 
+	$: hasPersonalName = displayName && displayName !== 'Cliente' && displayName.trim().length > 0;
+	$: proposalWaText = encodeURIComponent(
+		`Hola MatchHome${hasPersonalName ? `, soy ${displayName}` : ''}, estoy revisando la propuesta de la propiedad ${anchorPublicId ? `[${anchorPublicId}] ` : ''}"${anchorProperty?.title || 'Propiedad'}" (${anchorPrice}). Me gustaría agendar una visita o recibir más información.`
+	);
+	$: proposalWaUrl = `https://wa.me/526145404003?text=${proposalWaText}`;
+
 	async function handleFormSubmit() {
 		submittingForm = true;
 		formError = null;
@@ -314,15 +320,18 @@
 	<header class="proposal-header">
 		<div class="container">
 			<div class="greeting-content">
-				{#if contact}
+				{#if hasPersonalName}
 					<div class="proposal-badge">
 						✨ Propuesta Personalizada
 					</div>
 					<h1>¡Hola, <span class="highlight">{displayName}</span>!</h1>
-					<p class="subtitle">Te preparamos esta propuesta especial basada en tus preferencias.</p>
+					<p class="subtitle">Te preparamos esta selección exclusiva basada en tus preferencias.</p>
 				{:else}
-					<h1>Hola, <span class="highlight">{displayName}</span></h1>
-					<p class="subtitle">Preparamos esta selección exclusiva basada en tu interés.</p>
+					<div class="proposal-badge">
+						✨ Selección Inmobiliaria Exclusiva
+					</div>
+					<h1>Descubre tu <span class="highlight">Próximo Hogar</span></h1>
+					<p class="subtitle">Hemos preparado esta selección especial de inmuebles destacados para ti.</p>
 				{/if}
 			</div>
 		</div>
@@ -463,7 +472,28 @@
 			<div class="contact-card">
 				<div class="contact-header">
 					<h2>¿Te interesa agendar una visita o solicitar más información?</h2>
-					<p>Déjanos tus datos y un asesor se pondrá en contacto contigo a la brevedad.</p>
+					<p>Contáctanos directamente por WhatsApp o llena el formulario para agendar.</p>
+				</div>
+
+				<div class="proposal-wa-cta-container">
+					<a
+						href={proposalWaUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="proposal-wa-btn"
+						title="Agendar visita por WhatsApp"
+					>
+						<svg class="proposal-wa-icon" viewBox="0 0 24 24" fill="currentColor">
+							<path
+								d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"
+							/>
+						</svg>
+						<span>💬 Agendar Recorrido por WhatsApp Inmediato</span>
+					</a>
+				</div>
+
+				<div class="proposal-divider">
+					<span>o déjanos tus datos en el formulario</span>
 				</div>
 
 				{#if formSubmitted}
@@ -703,6 +733,63 @@
 	.contact-header p {
 		color: #666;
 		font-size: 1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.proposal-wa-cta-container {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 1.25rem;
+	}
+
+	.proposal-wa-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.65rem;
+		background: #25D366;
+		color: #ffffff;
+		padding: 0.95rem 1.8rem;
+		border-radius: 30px;
+		font-weight: 700;
+		font-size: 1.05rem;
+		text-decoration: none;
+		box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
+		transition: background-color 0.2s, transform 0.15s, box-shadow 0.2s;
+	}
+
+	.proposal-wa-btn:hover {
+		background: #20BA5A;
+		color: #ffffff;
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45);
+	}
+
+	.proposal-wa-icon {
+		width: 22px;
+		height: 22px;
+		flex-shrink: 0;
+	}
+
+	.proposal-divider {
+		display: flex;
+		align-items: center;
+		text-align: center;
+		margin: 1.25rem 0 1.75rem;
+		color: #888;
+		font-size: 0.9rem;
+	}
+
+	.proposal-divider::before,
+	.proposal-divider::after {
+		content: '';
+		flex: 1;
+		border-bottom: 1px solid #e2e8f0;
+	}
+
+	.proposal-divider span {
+		padding: 0 14px;
+		font-weight: 500;
 	}
 
 	.proposal-contact-form {
