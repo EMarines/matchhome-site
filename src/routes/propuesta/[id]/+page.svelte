@@ -982,29 +982,40 @@
 	.anchor-thumbnails-strip {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		margin-top: 4px;
+		gap: 10px;
+		margin-top: 10px;
 		margin-bottom: 0;
 		overflow-x: auto;
-		padding-bottom: 6px;
+		padding-bottom: 10px;
 		scrollbar-width: thin;
-		scrollbar-color: #ccc transparent;
+		scrollbar-color: #8c8c8c #e2e8f0;
 		-webkit-overflow-scrolling: touch;
 	}
 
 	.anchor-thumbnails-strip::-webkit-scrollbar {
-		height: 4px;
+		height: 8px;
+		background: #e2e8f0;
+		border-radius: 6px;
+	}
+
+	.anchor-thumbnails-strip::-webkit-scrollbar-track {
+		background: #e2e8f0;
+		border-radius: 6px;
 	}
 
 	.anchor-thumbnails-strip::-webkit-scrollbar-thumb {
-		background: #ccc;
-		border-radius: 4px;
+		background: #8c8c8c;
+		border-radius: 6px;
+	}
+
+	.anchor-thumbnails-strip::-webkit-scrollbar-thumb:hover {
+		background: #555;
 	}
 
 	.anchor-thumb-btn {
-		width: 56px;
-		height: 44px;
-		border-radius: 6px;
+		width: 82px;
+		height: 58px;
+		border-radius: 8px;
 		overflow: hidden;
 		border: 2px solid transparent;
 		padding: 0;

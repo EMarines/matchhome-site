@@ -601,29 +601,40 @@
 	.gallery-thumbnails-strip {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		margin-top: 10px;
+		gap: 10px;
+		margin-top: 14px;
 		margin-bottom: 0;
 		overflow-x: auto;
-		padding-bottom: 6px;
+		padding-bottom: 10px;
 		scrollbar-width: thin;
-		scrollbar-color: #ccc transparent;
+		scrollbar-color: #8c8c8c #e2e8f0;
 		-webkit-overflow-scrolling: touch;
 	}
 
 	.gallery-thumbnails-strip::-webkit-scrollbar {
-		height: 5px;
+		height: 8px;
+		background: #e2e8f0;
+		border-radius: 6px;
+	}
+
+	.gallery-thumbnails-strip::-webkit-scrollbar-track {
+		background: #e2e8f0;
+		border-radius: 6px;
 	}
 
 	.gallery-thumbnails-strip::-webkit-scrollbar-thumb {
-		background: #ccc;
-		border-radius: 4px;
+		background: #8c8c8c;
+		border-radius: 6px;
+	}
+
+	.gallery-thumbnails-strip::-webkit-scrollbar-thumb:hover {
+		background: #555;
 	}
 
 	.gallery-thumb-btn {
-		width: 60px;
-		height: 46px;
-		border-radius: 6px;
+		width: 82px;
+		height: 58px;
+		border-radius: 8px;
 		overflow: hidden;
 		border: 2px solid transparent;
 		padding: 0;
@@ -654,19 +665,19 @@
 		position: absolute;
 		top: 20px;
 		left: 20px;
-		background: rgba(0, 0, 0, 0.82);
+		background: rgba(0, 0, 0, 0.85);
 		color: white;
-		padding: 8px 16px;
-		border-radius: 8px;
-		font-weight: 700;
-		font-size: 1.2rem;
+		padding: 10px 18px;
+		border-radius: 10px;
+		font-weight: 800;
+		font-size: 1.25rem;
 		backdrop-filter: blur(6px);
 		max-width: calc(100% - 40px);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		z-index: 5;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 	}
 	.details-info-bar {
 		display: grid;
@@ -833,18 +844,18 @@
 	.main-image-container {
 		position: relative;
 		width: 100%;
-		height: 420px;
+		height: 490px;
 		background: #111;
-		border-radius: 8px;
+		border-radius: 12px;
 		overflow: hidden;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 	}
 
 	.main-image {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		border-radius: 8px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		border-radius: 12px;
 		display: block;
 	}
 
