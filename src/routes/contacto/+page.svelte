@@ -60,7 +60,7 @@
 	$: phoneClean = (tenant.phoneRaw || '526145404003').replace(/\D/g, '');
 	$: emailDisplay = tenant.email || 'matchhomebr@gmail.com';
 	$: addressDisplay = tenant.address || 'Av. Francisco Villa # 5700, Col. Panamericana, Chihuahua, Chih.';
-	$: slogan = tenant.slogan || 'Tu Futuro En Buenas Manos';
+	$: slogan = tenant.slogan || 'Tu Patrimonio En Buenas Manos';
 	$: companyName = tenant.name || 'MatchHome';
 	$: logoUrl = tenant.theme?.logo || '/logo.png';
 </script>
@@ -81,7 +81,7 @@
 				{#if logoUrl}
 					<img src={logoUrl} alt={companyName} class="hero-logo" />
 				{/if}
-				<span class="hero-slogan-badge">✨ {slogan}</span>
+				<span class="hero-slogan-badge">{slogan}</span>
 			</div>
 			<h1 class="hero-title">Estamos Listos para Asesorarte</h1>
 			<p class="hero-subtitle">

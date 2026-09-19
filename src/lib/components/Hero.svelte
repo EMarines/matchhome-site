@@ -44,8 +44,8 @@
 <section class="hero">
 	<div class="hero-overlay"></div>
 	<div class="container hero-content">
-		<div class="hero-slogan-tag">
-			<span>✨ {$page.data.tenant?.slogan || 'Tu Futuro En Buenas Manos'}</span>
+		<div class="hero-slogan-area">
+			<span class="hero-slogan-text">{$page.data.tenant?.slogan || 'Tu Patrimonio En Buenas Manos'}</span>
 		</div>
 		<h2 class="hero-title">Encuentra tu hogar ideal</h2>
 		<p class="hero-subtitle">Las mejores propiedades en exclusiva para ti en Chihuahua</p>
@@ -88,31 +88,27 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background: rgba(10, 25, 47, 0.45);
+		background: rgba(10, 25, 47, 0.48);
 	}
 	.hero-content {
 		position: relative;
 		z-index: 1;
 		text-align: center;
 		width: 100%;
-		max-width: 820px;
+		max-width: 840px;
 		padding: 0 var(--spacing-md);
 	}
-	.hero-slogan-tag {
-		display: inline-block;
-		margin-bottom: 0.75rem;
+	.hero-slogan-area {
+		margin-bottom: 0.65rem;
 	}
-	.hero-slogan-tag span {
-		font-family: 'Segoe Print', 'Segoe Script', 'Comic Sans MS', cursive, sans-serif;
-		background: rgba(0, 0, 0, 0.45);
+	.hero-slogan-text {
 		color: var(--color-secondary, #d9a036);
-		padding: 6px 18px;
-		border-radius: 25px;
-		font-size: 1.05rem;
-		font-weight: 700;
-		border: 1px solid rgba(217, 160, 54, 0.4);
-		backdrop-filter: blur(4px);
-		letter-spacing: 0.5px;
+		font-size: 1.55rem;
+		font-weight: 800;
+		letter-spacing: 1.5px;
+		text-transform: uppercase;
+		text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+		display: inline-block;
 	}
 	.hero-title {
 		font-size: 3.2rem;
@@ -189,6 +185,10 @@
 			min-height: 420px;
 			padding: 3.5rem 0;
 		}
+		.hero-slogan-text {
+			font-size: 1.25rem;
+			letter-spacing: 1px;
+		}
 		.hero-title {
 			font-size: 2.1rem;
 			line-height: 1.25;
@@ -219,6 +219,9 @@
 	}
 
 	@media (max-width: 480px) {
+		.hero-slogan-text {
+			font-size: 1.1rem;
+		}
 		.hero-title {
 			font-size: 1.75rem;
 		}

@@ -15,7 +15,7 @@
 				{:else}
 					<h3 class="footer-logo">{$page.data.tenant?.name || 'MatchHome'}</h3>
 				{/if}
-				<span class="footer-slogan">{$page.data.tenant?.slogan || 'Tu Futuro En Buenas Manos'}</span>
+				<span class="footer-slogan">{$page.data.tenant?.slogan || 'Tu Patrimonio En Buenas Manos'}</span>
 			</a>
 			<p class="footer-desc">
 				{$page.data.tenant?.description || 'Tu aliado confiable para encontrar la propiedad de tus sueños. Experiencia, seguridad y confianza.'}
@@ -41,7 +41,7 @@
 		</div>
 	</div>
 	<div class="footer-bottom">
-		<p>&copy; {new Date().getFullYear()} {$page.data.tenant?.name || 'MatchHome'}. Todos los derechos reservados. | <em>{$page.data.tenant?.slogan || 'Tu Futuro En Buenas Manos'}</em></p>
+		<p>&copy; {new Date().getFullYear()} {$page.data.tenant?.name || 'MatchHome'}. Todos los derechos reservados. | <em>{$page.data.tenant?.slogan || 'Tu Patrimonio En Buenas Manos'}</em></p>
 	</div>
 </footer>
 

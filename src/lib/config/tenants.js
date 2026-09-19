@@ -5,7 +5,7 @@ export const tenants = {
     id: 'dev-tenant',
     name: 'MatchHome',
     fullName: 'MatchHome Bienes Raíces',
-    slogan: 'Tu Futuro En Buenas Manos',
+    slogan: 'Tu Patrimonio En Buenas Manos',
     phone: '614 540 4003',
     phoneRaw: '526145404003',
     email: 'matchhomebr@gmail.com',
@@ -26,7 +26,7 @@ export const tenants = {
     id: 'alpha',
     name: 'Alpha Real Estate',
     fullName: 'Alpha Real Estate',
-    slogan: 'Tu Futuro En Buenas Manos',
+    slogan: 'Tu Patrimonio En Buenas Manos',
     phone: '614 540 4003',
     phoneRaw: '526145404003',
     email: 'matchhomebr@gmail.com',
@@ -50,4 +50,3 @@ export function getTenantConfig(host) {
   const domain = host ? host.split(':')[0] : 'localhost';
   return tenants[domain] || tenants['localhost']; // Fallback a localhost por defecto
 }
-

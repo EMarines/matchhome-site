@@ -4,7 +4,7 @@
 	$: tenant = $page.data.tenant || {};
 	$: companyName = tenant.name || 'MatchHome';
 	$: fullName = tenant.fullName || 'MatchHome Bienes Raíces';
-	$: slogan = tenant.slogan || 'Tu Futuro En Buenas Manos';
+	$: slogan = tenant.slogan || 'Tu Patrimonio En Buenas Manos';
 	$: phoneDisplay = tenant.phone || '614 540 4003';
 	$: phoneClean = (tenant.phoneRaw || '526145404003').replace(/\D/g, '');
 	$: emailDisplay = tenant.email || 'matchhomebr@gmail.com';
@@ -29,7 +29,7 @@
 				{#if logoUrl}
 					<img src={logoUrl} alt={companyName} class="hero-logo-img" />
 				{/if}
-				<span class="hero-slogan">✨ {slogan}</span>
+				<span class="hero-slogan">{slogan}</span>
 			</div>
 			<h1 class="hero-title">Conectamos Tus Sueños con el Hogar Ideal</h1>
 			<p class="hero-subtitle">

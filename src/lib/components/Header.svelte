@@ -24,7 +24,7 @@
 				{:else}
 					<h1>{$page.data.tenant?.name || 'MatchHome'}</h1>
 				{/if}
-				<span class="logo-slogan">{$page.data.tenant?.slogan || 'Tu Futuro En Buenas Manos'}</span>
+				<span class="logo-slogan">{$page.data.tenant?.slogan || 'Tu Patrimonio En Buenas Manos'}</span>
 			</a>
 		</div>
 
