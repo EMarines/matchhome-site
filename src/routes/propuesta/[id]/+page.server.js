@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { serializeFirestoreData } from '$lib/utils/serializeFirestore';
+import { isSinergia2 } from '$lib/utils/trimPropertyPayload';
 import inventoryData from '$lib/data/inventory.json';
 import { mockProperties } from '$lib/data/mockProperties';
 
@@ -189,6 +190,11 @@ export async function load({ params, url, locals }) {
   // ── Determinar si es contacto existente con preferencias propias ──────────────
   const isExistingContact = Boolean(contact && contact.id);
 
+  // ── REGLA CRÍTICA SINERGIA 2 (Red Externa / Alianza Privada) ─────────────────
+  // Las propiedades de Sinergia 2 SÍ pueden ser la casa principal (anchorProperty),
+  // pero NUNCA pueden mostrarse como propiedad secundaria/similar recomendada.
+  const eligibleSimilarPool = allPropertiesPool.filter((p) => !isSinergia2(p));
+
   let similars = [];
 
   if (isExistingContact && contact) {
@@ -202,9 +208,10 @@ export async function load({ params, url, locals }) {
     const contactLocations = Array.isArray(contact.locaProperty) ? contact.locaProperty.map(l => l.toLowerCase()) : [];
     const contactTags = Array.isArray(contact.tagsProperty) ? contact.tagsProperty.map(t => t.toLowerCase()) : [];
 
-    similars = allPropertiesPool.filter((p) => {
+    similars = eligibleSimilarPool.filter((p) => {
       const pId = p.public_id || p.easybroker_id || p.id;
       if (pId === anchorId) return false;
+      if (isSinergia2(p)) return false;
 
       // Tipo de propiedad
       const pPropType = p.selecTP || p.tipoPropiedad || p.property_type || '';
@@ -255,9 +262,10 @@ export async function load({ params, url, locals }) {
     const priceMin = basePrice * 0.8;
     const priceMax = basePrice * 1.2;
 
-    similars = allPropertiesPool.filter((p) => {
+    similars = eligibleSimilarPool.filter((p) => {
       const pId = p.public_id || p.easybroker_id || p.id;
       if (pId === anchorId) return false;
+      if (isSinergia2(p)) return false;
 
       const pOpType = p.selecTO || p.tipoOperacion || (p.operations?.[0]?.type) || '';
       const pPropType = p.selecTP || p.tipoPropiedad || p.property_type || '';

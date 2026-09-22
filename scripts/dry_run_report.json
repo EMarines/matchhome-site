@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-09-22T23:12:26.945Z",
+  "projectId": "matchhome-crm-46de4",
+  "summary": {
+    "totalContacts": 728,
+    "totalBinnacles": 5512,
+    "validBinnacles": 5477,
+    "orphanBinnacles": 0,
+    "phoneOrCustomBinnacles": 35,
+    "emptyTargetBinnacles": 0,
+    "totalTodos": 3,
+    "validTodos": 1,
+    "orphanTodos": 0,
+    "generalTodos": 2
+  },
+  "orphanBinnacleIds": [],
+  "orphanTodoIds": []
+}

@@ -1,5 +1,5 @@
 import { serializeFirestoreData } from '$lib/utils/serializeFirestore';
-import { trimPropertyForCatalog } from '$lib/utils/trimPropertyPayload';
+import { trimPropertyForCatalog, isSinergia2 } from '$lib/utils/trimPropertyPayload';
 import inventoryData from '$lib/data/inventory.json';
 
 export async function load({ locals }) {
@@ -11,7 +11,9 @@ export async function load({ locals }) {
       const snapshot = await db.collection('properties').get();
       if (!snapshot.empty) {
         const rawProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const trimmed = rawProperties.map(trimPropertyForCatalog).filter(Boolean);
+        // REGLA: Sinergia 2 no es publicable en catálogo abierto; solo se ofrece directo a contactos
+        const publicProperties = rawProperties.filter(p => !isSinergia2(p));
+        const trimmed = publicProperties.map(trimPropertyForCatalog).filter(Boolean);
         return {
           properties: serializeFirestoreData(trimmed),
           tenant
@@ -23,7 +25,7 @@ export async function load({ locals }) {
   }
 
   // Fallback to local inventory.json if Firestore is not connected or empty
-  const localTrimmed = inventoryData.map(trimPropertyForCatalog).filter(Boolean);
+  const localTrimmed = inventoryData.filter(p => !isSinergia2(p)).map(trimPropertyForCatalog).filter(Boolean);
   return {
     properties: serializeFirestoreData(localTrimmed),
     tenant

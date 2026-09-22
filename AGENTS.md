@@ -22,10 +22,6 @@ Este repositorio (`matchhome-site`) contiene el portal web oficial y sistema de 
 
 ---
 
-## 4. Política de Respaldo Continuo en GitHub
-- Todo cambio probado debe subirse inmediatamente al repositorio remoto:
-  ```bash
-  git add -A
-  git commit -m "feat/fix: descripción técnica concisa"
-  git push origin main
-  ```
+## 4. Política de Control de Versiones (Git)
+- **Regla Estricta:** `git add`, `git commit` y `git push` se ejecutan **ÚNICAMENTE cuando Enrique lo solicite de forma explícita**.
+- Los cambios pequeños, iteraciones o pruebas se mantienen en local hasta recibir la orden de respaldo.

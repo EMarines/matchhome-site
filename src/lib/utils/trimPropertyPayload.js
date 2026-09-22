@@ -90,8 +90,32 @@ export function trimPropertyForCatalog(p) {
     terreno: p.terreno ?? p.lot_size ?? null,
     tags,
     features,
-    amenidades: p.amenidades || tags,
+    procedencia: p.procedencia || '',
+    procedenciaNombre: p.procedenciaNombre || '',
     created_at: p.created_at || p.createdAt || null,
     updated_at: p.updated_at || p.updatedAt || null
   };
+}
+
+/**
+ * Determina si una propiedad pertenece a Sinergia 2 (Red Externa / Alianza no publicable).
+ * Regla de negocio: Solo puede ofrecerse como propiedad principal de propuesta directa a un contacto,
+ * NUNCA como propiedad secundaria en las 6 similares ni en el catálogo público general.
+ */
+export function isSinergia2(p) {
+  if (!p) return false;
+
+  const proc = String(p.procedencia || '').trim().toUpperCase();
+  if (proc === 'S2') return true;
+
+  const procNombre = String(p.procedenciaNombre || '').toUpperCase();
+  if (procNombre.includes('SINERGIA 2') || procNombre.includes('(S2)')) return true;
+
+  const sourceName = String(p.sourceName || '').toUpperCase();
+  if (sourceName.includes('(S2)') || sourceName.includes('SINERGIA (S2)') || sourceName.includes('SINERGIA 2')) return true;
+
+  const key = String(p.clavePropiedad || p.public_id || p.id || '').trim().toUpperCase();
+  if (key.startsWith('S2-') || key.startsWith('S2_')) return true;
+
+  return false;
 }
