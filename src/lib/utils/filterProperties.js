@@ -48,7 +48,34 @@ const PROPERTY_TYPE_SYNONYMS = {
   villa: ['villa', 'quinta']
 };
 
-export function filterProperties(inventoryData = [], search = '', filters = {}, page = 1, limit = 24) {
+function getEffectivePrice(p) {
+  if (Array.isArray(p.operations) && p.operations.length > 0) {
+    const amt = parseNumber(p.operations[0].amount ?? p.operations[0].price);
+    if (amt > 0) return amt;
+  }
+  if (Array.isArray(p.operaciones) && p.operaciones.length > 0) {
+    const amt = parseNumber(p.operaciones[0].amount ?? p.operaciones[0].precio);
+    if (amt > 0) return amt;
+  }
+  return parseNumber(p.price ?? p.precio ?? p.budget ?? 0);
+}
+
+function getEffectiveDate(p) {
+  const d = p.updated_at || p.updatedAt || p.created_at || p.createdAt || p.fecha;
+  if (!d) return 0;
+  if (typeof d === 'number') return d;
+  if (typeof d === 'string') {
+    const parsed = Date.parse(d);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  if (d && typeof d === 'object') {
+    if (d._seconds) return d._seconds * 1000;
+    if (d.seconds) return d.seconds * 1000;
+  }
+  return 0;
+}
+
+export function filterProperties(inventoryData = [], search = '', filters = {}, page = 1, limit = 24, sortBy = 'recent') {
   const term = normalizeText(search);
 
   const filtered = inventoryData.filter((p) => {
@@ -218,6 +245,22 @@ export function filterProperties(inventoryData = [], search = '', filters = {}, 
 
     return true;
   });
+
+  // --- 6. Ordenamiento (Sort) ---
+  if (sortBy === 'price_asc') {
+    filtered.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
+  } else if (sortBy === 'price_desc') {
+    filtered.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
+  } else if (sortBy === 'featured') {
+    filtered.sort((a, b) => {
+      const featA = a.destacada || a.featured || a.procedencia === 'MH' ? 1 : 0;
+      const featB = b.destacada || b.featured || b.procedencia === 'MH' ? 1 : 0;
+      return featB - featA;
+    });
+  } else {
+    // Por defecto: 'recent' (más recientes primero)
+    filtered.sort((a, b) => getEffectiveDate(b) - getEffectiveDate(a));
+  }
 
   const total = filtered.length;
   const parsedLimit = parseNumber(limit, 24);

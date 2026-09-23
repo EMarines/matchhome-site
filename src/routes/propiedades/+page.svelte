@@ -13,6 +13,9 @@
 
 	// Estado inicial desde URL
 	let search = $page.url.searchParams.get('q') || '';
+	let currentPage = parseInt($page.url.searchParams.get('page')) || 1;
+	let limit = 24;
+
 	let filters = {
 		bedrooms: $page.url.searchParams.get('bedrooms') || '0',
 		bathrooms: $page.url.searchParams.get('bathrooms') || '0',
@@ -21,10 +24,8 @@
 		maxPrice: $page.url.searchParams.get('max_price') || '',
 		propertyType: $page.url.searchParams.get('property_type') || '',
 		operationType: $page.url.searchParams.get('operation_type') || '',
-		tags: $page.url.searchParams.get('tags') ? $page.url.searchParams.get('tags').split(',') : []
+		tags: $page.url.searchParams.get('tags') ? $page.url.searchParams.get('tags').split(',').filter(Boolean) : []
 	};
-	let currentPage = parseInt($page.url.searchParams.get('page')) || 1;
-	let limit = parseInt($page.url.searchParams.get('limit')) || 24;
 
 	// Usar propiedades del servidor (Firestore / fallback)
 	$: sourceProperties = data.properties || [];
@@ -51,7 +52,6 @@
 		const params = new URLSearchParams();
 		if (search) params.set('q', search);
 		if (currentPage > 1) params.set('page', currentPage.toString());
-		if (limit !== 24) params.set('limit', limit.toString());
 		if (parseInt(filters.bedrooms) > 0) params.set('bedrooms', filters.bedrooms);
 		if (parseInt(filters.bathrooms) > 0) params.set('bathrooms', filters.bathrooms);
 		if (parseInt(filters.parking) > 0) params.set('parking', filters.parking);
@@ -122,12 +122,6 @@
 		updateUrl();
 	}
 
-	function handleLimitChange(e) {
-		limit = parseInt(e.target.value) || 24;
-		currentPage = 1;
-		updateUrl();
-	}
-
 	function nextPage() {
 		if (pagination.next_page) {
 			currentPage++;
@@ -162,17 +156,17 @@
 		<div class="header-titles">
 			<h1 class="page-title">Catálogo Completo de Propiedades</h1>
 			<p class="page-subtitle">
-				Encuentra inmuebles en Chihuahua con filtros avanzados ({pagination.total} resultado{pagination.total === 1 ? '' : 's'})
+				Encuentra inmuebles en Chihuahua ({pagination.total} resultado{pagination.total === 1 ? '' : 's'})
 			</p>
 		</div>
 
-		<!-- Barra de Búsqueda Rápida y Botón de Filtros -->
+		<!-- Barra Superior: Solo Búsqueda de Texto y Botón de Filtros -->
 		<div class="top-action-bar">
 			<div class="search-box">
 				<span class="search-icon">🔍</span>
 				<input
 					type="text"
-					placeholder="Buscar por colonia, clave, tipo..."
+					placeholder="Buscar por colonia, clave, título..."
 					value={search}
 					on:input={handleSearchInput}
 					class="search-input"
@@ -182,7 +176,7 @@
 				{/if}
 			</div>
 
-			<!-- Botón Prominente y Claro para Filtrar Propiedades -->
+			<!-- Botón de Filtrar Propiedades con Badge -->
 			<button
 				type="button"
 				class="filter-trigger-btn {showFilters ? 'active' : ''} {activeFilterCount > 0 ? 'has-active' : ''}"
@@ -196,16 +190,6 @@
 				{/if}
 				<span class="chevron">{showFilters ? '▲' : '▼'}</span>
 			</button>
-
-			<div class="limit-selector">
-				<label for="pageLimit">Mostrar:</label>
-				<select id="pageLimit" bind:value={limit} on:change={handleLimitChange}>
-					<option value={12}>12</option>
-					<option value={24}>24</option>
-					<option value={48}>48</option>
-					<option value={96}>96</option>
-				</select>
-			</div>
 		</div>
 	</div>
 
@@ -264,15 +248,9 @@
 		<Filters
 			{filters}
 			{search}
-			{limit}
 			totalMatches={pagination.total}
 			onSearchChange={(val) => {
 				search = val;
-				currentPage = 1;
-				updateUrl();
-			}}
-			onLimitChange={(newLimit) => {
-				limit = newLimit;
 				currentPage = 1;
 				updateUrl();
 			}}
@@ -326,7 +304,7 @@
 		align-items: center;
 		justify-content: center;
 		text-align: center;
-		gap: 1.5rem;
+		gap: 1.25rem;
 	}
 
 	.header-titles {
@@ -348,17 +326,17 @@
 
 	.top-action-bar {
 		display: flex;
-		gap: 1rem;
+		gap: 0.75rem;
 		align-items: center;
 		justify-content: center;
 		flex-wrap: wrap;
 		background: #ffffff;
-		padding: 1rem 1.5rem;
+		padding: 0.85rem 1.25rem;
 		border-radius: 12px;
 		border: 1px solid #e2e8f0;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+		box-shadow: 0 4px 14px rgba(0, 40, 90, 0.05);
 		width: 100%;
-		max-width: 820px;
+		max-width: 700px;
 		margin: 0 auto;
 	}
 
@@ -375,7 +353,7 @@
 	}
 
 	.search-box:focus-within {
-		border-color: var(--color-primary, #0056b3);
+		border-color: #0056b3;
 		background: #ffffff;
 	}
 
@@ -390,7 +368,7 @@
 		border: none;
 		background: transparent;
 		padding: 0.65rem 0.25rem;
-		font-size: 0.95rem;
+		font-size: 0.92rem;
 		outline: none;
 		color: #2d3748;
 	}
@@ -404,16 +382,11 @@
 		padding: 4px;
 	}
 
-	.clear-icon:hover {
-		color: #4a5568;
-	}
-
-	/* Botón Prominente de Filtrado */
 	.filter-trigger-btn {
 		background: #ffffff;
-		border: 2px solid var(--color-primary, #0056b3);
-		color: var(--color-primary, #0056b3);
-		padding: 0.65rem 1.4rem;
+		border: 2px solid #0056b3;
+		color: #0056b3;
+		padding: 0.6rem 1.4rem;
 		border-radius: 30px;
 		font-size: 0.95rem;
 		font-weight: 700;
@@ -421,35 +394,22 @@
 		align-items: center;
 		gap: 0.5rem;
 		cursor: pointer;
-		box-shadow: 0 4px 14px rgba(0, 86, 179, 0.12);
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 2px 8px rgba(0, 86, 179, 0.12);
+		transition: all 0.2s ease;
 		white-space: nowrap;
 	}
 
 	.filter-trigger-btn:hover {
 		background: #f0f7ff;
-		transform: translateY(-1px);
-		box-shadow: 0 6px 18px rgba(0, 86, 179, 0.2);
 	}
 
 	.filter-trigger-btn.active {
-		background: var(--color-primary, #0056b3);
+		background: #0056b3;
 		color: #ffffff;
-		box-shadow: 0 6px 20px rgba(0, 86, 179, 0.35);
-	}
-
-	.filter-trigger-btn.has-active:not(.active) {
-		border-color: var(--color-secondary, #c5a059);
-		color: #8c6827;
-		background: #fffdf7;
-	}
-
-	.btn-icon {
-		font-size: 1.1rem;
 	}
 
 	.badge-count {
-		background: var(--color-secondary, #c5a059);
+		background: #c5a059;
 		color: #ffffff;
 		font-size: 0.75rem;
 		font-weight: 800;
@@ -463,29 +423,6 @@
 		opacity: 0.8;
 	}
 
-	.limit-selector {
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: 0.85rem;
-		color: #718096;
-		font-weight: 600;
-	}
-
-	.limit-selector select {
-		padding: 0.5rem 0.6rem;
-		border: 1px solid #cbd5e0;
-		border-radius: 6px;
-		background: #ffffff;
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: #1a202c;
-		outline: none;
-		cursor: pointer;
-		min-width: 65px;
-	}
-
-	/* Píldoras de Filtros Activos */
 	.active-pills-bar {
 		display: flex;
 		flex-wrap: wrap;
@@ -523,11 +460,6 @@
 		background: #fee2e2;
 		border-color: #fca5a5;
 		color: #dc2626;
-	}
-
-	.pill-remove {
-		font-size: 0.7rem;
-		opacity: 0.7;
 	}
 
 	.clear-all-link {
@@ -593,8 +525,25 @@
 		font-size: 0.95rem;
 	}
 
-	.page-info strong {
-		color: #2d3748;
+	.btn {
+		padding: 0.55rem 1.1rem;
+		border-radius: 6px;
+		font-size: 0.9rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.btn-primary {
+		background: #0056b3;
+		border: 1px solid #0056b3;
+		color: #ffffff;
+	}
+
+	.btn-secondary {
+		background: #f1f5f9;
+		border: 1px solid #cbd5e1;
+		color: #334155;
 	}
 
 	@media (max-width: 768px) {
@@ -612,13 +561,6 @@
 		.grid {
 			grid-template-columns: minmax(0, 1fr);
 			gap: 1.25rem;
-		}
-		.pagination-controls {
-			gap: 0.75rem;
-		}
-		.pagination-controls button {
-			padding: 0.6rem 1rem;
-			font-size: 0.85rem;
 		}
 	}
 </style>

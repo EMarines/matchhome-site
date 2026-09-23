@@ -190,16 +190,6 @@
 				{/if}
 				<span class="chevron">{showFilters ? '▲' : '▼'}</span>
 			</button>
-
-			<div class="limit-selector">
-				<label for="pageLimit">Mostrar:</label>
-				<select id="pageLimit" bind:value={limit} on:change={handleLimitChange}>
-					<option value={12}>12</option>
-					<option value={24}>24</option>
-					<option value={48}>48</option>
-					<option value={96}>96</option>
-				</select>
-			</div>
 		</div>
 	</div>
 
@@ -417,28 +407,6 @@
 		font-size: 0.75rem;
 		opacity: 0.8;
 		transition: transform 0.2s;
-	}
-
-	.limit-selector {
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: 0.85rem;
-		color: #718096;
-		font-weight: 600;
-	}
-
-	.limit-selector select {
-		padding: 0.4rem 0.6rem;
-		border: 1px solid #cbd5e0;
-		border-radius: 6px;
-		background: #ffffff;
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: #1a202c;
-		outline: none;
-		cursor: pointer;
-		min-width: 65px;
 	}
 
 	/* Barra de Píldoras de Filtros Activos */

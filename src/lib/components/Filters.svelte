@@ -1,10 +1,8 @@
 <script>
 	export let filters = {};
 	export let search = '';
-	export let limit = 24;
 	export let onFilterChange;
 	export let onSearchChange;
-	export let onLimitChange;
 	export let onClear;
 	export let onClose;
 	export let totalMatches = null;
@@ -51,11 +49,6 @@
 	function clearSearchText() {
 		clearTimeout(debounceTimer);
 		if (onSearchChange) onSearchChange('');
-	}
-
-	function handleLimitSelect(e) {
-		const val = parseInt(e.target.value) || 24;
-		if (onLimitChange) onLimitChange(val);
 	}
 
 	$: activeCount = [
@@ -176,21 +169,6 @@
 			</select>
 		</div>
 
-		<div class="filter-group limit-group">
-			<label for="filter-limit-select">Propiedades a mostrar</label>
-			<select
-				id="filter-limit-select"
-				value={limit}
-				on:change={handleLimitSelect}
-			>
-				<option value="12">12 por página</option>
-				<option value="24">24 por página</option>
-				<option value="48">48 por página</option>
-				<option value="96">96 por página</option>
-				<option value="200">200 (Ver todas)</option>
-			</select>
-		</div>
-
 		<div class="filter-group price-group">
 			<label for="minPrice">Rango de Precio ($ MXN)</label>
 			<div class="price-inputs">
@@ -299,8 +277,8 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding-bottom: 0.75rem;
 		border-bottom: 1px solid #edf2f7;
+		padding-bottom: 0.75rem;
 	}
 
 	.title-with-badge {
@@ -309,40 +287,38 @@
 		gap: 0.5rem;
 	}
 
-	.title-with-badge .icon {
-		font-size: 1.2rem;
-	}
-
 	.title-with-badge h3 {
 		margin: 0;
 		font-size: 1.15rem;
-		font-weight: 700;
 		color: #1a202c;
+		font-weight: 700;
+	}
+
+	.icon {
+		font-size: 1.2rem;
 	}
 
 	.active-badge {
-		background: var(--color-secondary, #c5a059);
+		background: var(--color-primary, #0056b3);
 		color: #ffffff;
 		font-size: 0.75rem;
 		font-weight: 700;
 		padding: 2px 8px;
 		border-radius: 12px;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
 	}
 
 	.close-icon-btn {
-		background: #f7fafc;
+		background: transparent;
 		border: 1px solid #e2e8f0;
-		color: #4a5568;
+		color: #718096;
+		font-size: 0.9rem;
+		width: 28px;
+		height: 28px;
 		border-radius: 50%;
-		width: 32px;
-		height: 32px;
-		font-size: 1rem;
+		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		cursor: pointer;
 		transition: all 0.2s;
 	}
 
@@ -351,71 +327,62 @@
 		color: #1a202c;
 	}
 
-	/* Input de texto dentro de los filtros */
 	.text-search-section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.35rem;
+		gap: 0.4rem;
 	}
 
 	.text-search-section label {
 		font-size: 0.85rem;
 		font-weight: 700;
-		color: var(--color-primary, #0056b3);
+		color: #0056b3;
 	}
 
 	.search-input-box {
+		position: relative;
 		display: flex;
 		align-items: center;
 		background: #f8fafc;
-		border: 1.5px solid #cbd5e0;
+		border: 1px solid #cbd5e0;
 		border-radius: 8px;
-		padding: 0.2rem 0.75rem;
-		transition: all 0.2s;
+		padding: 0 0.75rem;
+		transition: border-color 0.2s;
 	}
 
 	.search-input-box:focus-within {
-		border-color: var(--color-primary, #0056b3);
+		border-color: #0056b3;
 		background: #ffffff;
-		box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15);
-	}
-
-	.search-icon {
-		font-size: 1.1rem;
-		color: #718096;
-		margin-right: 0.5rem;
+		box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.15);
 	}
 
 	.text-search-input {
 		flex: 1;
 		border: none;
 		background: transparent;
-		padding: 0.55rem 0.25rem;
+		padding: 0.65rem 0.5rem;
 		font-size: 0.95rem;
 		outline: none;
 		color: #2d3748;
-		font-weight: 500;
 	}
 
 	.clear-search-btn {
 		background: transparent;
 		border: none;
 		color: #a0aec0;
-		font-size: 0.9rem;
+		font-size: 0.85rem;
 		cursor: pointer;
 		padding: 4px;
-		border-radius: 50%;
 	}
 
 	.clear-search-btn:hover {
-		color: #e53e3e;
+		color: #4a5568;
 	}
 
 	.filters-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 		gap: 1rem;
-		align-items: flex-end;
 	}
 
 	.filter-group {
@@ -425,37 +392,34 @@
 	}
 
 	.filter-group label {
-		font-size: 0.85rem;
+		font-size: 0.82rem;
 		font-weight: 600;
 		color: #4a5568;
 	}
 
-	.filter-group select,
-	.filter-group input {
-		padding: 0.65rem 0.85rem;
+	.filter-group select {
+		padding: 0.6rem 0.75rem;
 		border: 1px solid #cbd5e0;
-		border-radius: 8px;
-		font-size: 0.95rem;
+		border-radius: 6px;
 		background: #ffffff;
+		font-size: 0.9rem;
 		color: #2d3748;
 		outline: none;
-		transition: border-color 0.2s, box-shadow 0.2s;
+		cursor: pointer;
 	}
 
-	.filter-group select:focus,
-	.filter-group input:focus {
-		border-color: var(--color-primary, #0056b3);
-		box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15);
-	}
-
-	.limit-group select {
-		font-weight: 600;
-		color: var(--color-primary, #0056b3);
-		background-color: #f8fafc;
+	.filter-group select:focus {
+		border-color: #0056b3;
 	}
 
 	.price-group {
 		grid-column: span 2;
+	}
+
+	@media (max-width: 640px) {
+		.price-group {
+			grid-column: span 1;
+		}
 	}
 
 	.price-inputs {
@@ -465,24 +429,33 @@
 	}
 
 	.price-inputs input {
-		width: 100%;
+		flex: 1;
+		padding: 0.6rem 0.75rem;
+		border: 1px solid #cbd5e0;
+		border-radius: 6px;
+		font-size: 0.9rem;
+		outline: none;
+	}
+
+	.price-inputs input:focus {
+		border-color: #0056b3;
 	}
 
 	.price-separator {
 		color: #a0aec0;
-		font-weight: 700;
+		font-weight: bold;
 	}
 
 	.tags-section {
-		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 
 	.tags-section label {
-		display: block;
 		font-size: 0.85rem;
-		font-weight: 600;
+		font-weight: 700;
 		color: #4a5568;
-		margin-bottom: 0.5rem;
 	}
 
 	.tags-grid {
@@ -492,18 +465,29 @@
 	}
 
 	.tag-chip {
-		padding: 6px 14px;
-		border: 1px solid #e2e8f0;
-		border-radius: 20px;
 		background: #f8fafc;
+		border: 1px solid #e2e8f0;
+		padding: 0.4rem 0.8rem;
+		border-radius: 20px;
+		font-size: 0.85rem;
 		color: #4a5568;
 		cursor: pointer;
-		font-size: 0.85rem;
-		font-weight: 500;
-		display: inline-flex;
+		display: flex;
 		align-items: center;
-		gap: 6px;
-		transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		gap: 0.4rem;
+		transition: all 0.2s;
+	}
+
+	.tag-chip:hover {
+		background: #edf2f7;
+		border-color: #cbd5e0;
+	}
+
+	.tag-chip.active {
+		background: #eff6ff;
+		border-color: #0056b3;
+		color: #0056b3;
+		font-weight: 600;
 	}
 
 	.chip-dot {
@@ -511,32 +495,18 @@
 		height: 6px;
 		border-radius: 50%;
 		background: #cbd5e0;
-		transition: background 0.2s;
-	}
-
-	.tag-chip:hover {
-		background: #edf2f7;
-		border-color: #cbd5e0;
-		color: #1a202c;
-	}
-
-	.tag-chip.active {
-		background: var(--color-primary, #0056b3);
-		color: #ffffff;
-		border-color: var(--color-primary, #0056b3);
-		box-shadow: 0 2px 6px rgba(0, 86, 179, 0.25);
 	}
 
 	.tag-chip.active .chip-dot {
-		background: #ffffff;
+		background: #0056b3;
 	}
 
 	.filter-footer {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding-top: 1rem;
 		border-top: 1px solid #edf2f7;
+		padding-top: 1rem;
 		flex-wrap: wrap;
 		gap: 1rem;
 	}
@@ -554,72 +524,35 @@
 		display: flex;
 		gap: 0.75rem;
 		align-items: center;
+		flex-wrap: wrap;
 	}
 
-	.clear-btn {
-		border: 1px solid #e2e8f0;
-		color: #718096;
-		background: #ffffff;
-		padding: 0.6rem 1.25rem;
-		border-radius: 8px;
+	.btn {
+		padding: 0.55rem 1.1rem;
+		border-radius: 6px;
 		font-size: 0.9rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.2s;
 	}
 
-	.clear-btn:hover {
+	.btn-outline {
+		background: transparent;
+		border: 1px solid #cbd5e0;
+		color: #4a5568;
+	}
+
+	.btn-outline:hover {
 		background: #f7fafc;
-		border-color: #cbd5e0;
-		color: #e53e3e;
 	}
 
-	.apply-btn {
-		background: var(--color-primary, #0056b3);
+	.btn-primary {
+		background: #0056b3;
+		border: 1px solid #0056b3;
 		color: #ffffff;
-		padding: 0.6rem 1.5rem;
-		border-radius: 8px;
-		font-size: 0.9rem;
-		font-weight: 700;
-		border: none;
-		cursor: pointer;
-		box-shadow: 0 2px 8px rgba(0, 86, 179, 0.3);
-		transition: all 0.2s;
 	}
 
-	.apply-btn:hover {
+	.btn-primary:hover {
 		background: #004494;
-		transform: translateY(-1px);
-	}
-
-	@media (max-width: 768px) {
-		.filters-container {
-			padding: 1.25rem;
-			gap: 1rem;
-		}
-		.filters-grid {
-			grid-template-columns: 1fr;
-		}
-		.price-group {
-			grid-column: span 1;
-		}
-		.price-inputs {
-			display: grid;
-			grid-template-columns: 1fr auto 1fr;
-			gap: 0.4rem;
-		}
-		.filter-footer {
-			flex-direction: column;
-			align-items: stretch;
-		}
-		.filter-actions {
-			flex-direction: column;
-			width: 100%;
-		}
-		.clear-btn,
-		.apply-btn {
-			width: 100%;
-			text-align: center;
-		}
 	}
 </style>
