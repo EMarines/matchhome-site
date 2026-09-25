@@ -13,12 +13,16 @@
 	$: if (typeof document !== 'undefined') {
 		document.body.style.overflow = isMenuOpen ? 'hidden' : '';
 	}
+
+	$: currentContactId = $page.url.searchParams.get('c') || $page.data.contactId || '';
+	$: homeHref = currentContactId ? `/?c=${encodeURIComponent(currentContactId)}` : '/';
+	$: propHref = currentContactId ? `/propiedades?c=${encodeURIComponent(currentContactId)}` : '/propiedades';
 </script>
 
 <header class="header">
 	<div class="container header-container">
 		<div class="logo">
-			<a href="/" class="logo-link">
+			<a href={homeHref} class="logo-link">
 				{#if $page.data.tenant?.theme?.logo}
 					<img src={$page.data.tenant.theme.logo} alt={$page.data.tenant.name} class="logo-img" />
 				{:else}
@@ -49,8 +53,8 @@
 				<button class="close-btn" on:click={closeMenu} aria-label="Cerrar menú">✕</button>
 			</div>
 			<ul class="nav-list">
-				<li><a href="/" class="nav-link {$page.url.pathname === '/' ? 'active' : ''}" on:click={closeMenu}>Inicio</a></li>
-				<li><a href="/propiedades" class="nav-link {$page.url.pathname.startsWith('/propiedades') || $page.url.pathname.startsWith('/property') ? 'active' : ''}" on:click={closeMenu}>Propiedades</a></li>
+				<li><a href={homeHref} class="nav-link {$page.url.pathname === '/' ? 'active' : ''}" on:click={closeMenu}>Inicio</a></li>
+				<li><a href={propHref} class="nav-link {$page.url.pathname.startsWith('/propiedades') || $page.url.pathname.startsWith('/property') ? 'active' : ''}" on:click={closeMenu}>Propiedades</a></li>
 				<li><a href="/nosotros" class="nav-link {$page.url.pathname.startsWith('/nosotros') ? 'active' : ''}" on:click={closeMenu}>Nosotros</a></li>
 				<li><a href="/contacto" class="nav-link {$page.url.pathname.startsWith('/contacto') ? 'active' : ''}" on:click={closeMenu}>Contacto</a></li>
 			</ul>

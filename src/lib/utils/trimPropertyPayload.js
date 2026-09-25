@@ -98,24 +98,149 @@ export function trimPropertyForCatalog(p) {
 }
 
 /**
- * Determina si una propiedad pertenece a Sinergia 2 (Red Externa / Alianza no publicable).
- * Regla de negocio: Solo puede ofrecerse como propiedad principal de propuesta directa a un contacto,
- * NUNCA como propiedad secundaria en las 6 similares ni en el catálogo público general.
+ * Determina si una propiedad pertenece a Sinergia 2 o Sinergia 3 (Red Externa / Alianza no publicable).
+ * Regla de negocio estricta con Liberamiento:
+ * - En MatchHomeSite SOLO se publican propiedades propias (MH / EB propio) y de Sinergia 1 (S1).
+ * - Sinergia 2 (S2) y Sinergia 3 (S3) solo pueden verse:
+ *   1) Si el contacto específico la tiene liberada en `allowedPropsSet` (sendedProperties o bitácora).
+ *   2) Como propiedad principal de propuesta directa (`/propuesta/[id]`).
+ * - NUNCA se muestran al público general ni a contactos a los que no se les haya enviado.
  */
-export function isSinergia2(p) {
+export function isSinergia2(p, contactsSynergyMap = null, allowedPropsSet = null) {
   if (!p) return false;
 
-  const proc = String(p.procedencia || '').trim().toUpperCase();
-  if (proc === 'S2') return true;
+  // 0. LIBERAMIENTO EXCLUSIVO 1-A-1: Si la propiedad fue enviada/liberada a este contacto, NO se bloquea
+  if (allowedPropsSet && allowedPropsSet.size > 0) {
+    const pKeys = [p.id, p.public_id, p.easybroker_id, p.clavePropiedad]
+      .filter(Boolean)
+      .map((k) => String(k).trim().toUpperCase());
+    if (pKeys.some((k) => allowedPropsSet.has(k))) {
+      return false; // ¡Liberada exclusivamente para este contacto!
+    }
+  }
 
+  // 1. Verificar procedencia en vivo del contacto captador vinculado (si se provee mapa de contactos)
+  const cid = String(p.contactId || p.idContactoCaptador || '').trim();
+  if (cid && contactsSynergyMap && contactsSynergyMap[cid]) {
+    const contactProc = String(contactsSynergyMap[cid]).trim().toUpperCase();
+    if (contactProc === 'S2' || contactProc === 'S3') return true;
+    if (contactProc === 'S1' || contactProc === 'MH') return false;
+  }
+
+  // 2. Verificar campo procedencia directo en la propiedad
+  const proc = String(p.procedencia || '').trim().toUpperCase();
+  if (proc === 'S2' || proc === 'S3') return true;
+
+  // 3. Verificar textos de procedenciaNombre y sourceName
   const procNombre = String(p.procedenciaNombre || '').toUpperCase();
-  if (procNombre.includes('SINERGIA 2') || procNombre.includes('(S2)')) return true;
+  if (
+    procNombre.includes('SINERGIA 2') ||
+    procNombre.includes('(S2)') ||
+    procNombre.includes('SINERGIA 3') ||
+    procNombre.includes('(S3)')
+  ) {
+    return true;
+  }
 
   const sourceName = String(p.sourceName || '').toUpperCase();
-  if (sourceName.includes('(S2)') || sourceName.includes('SINERGIA (S2)') || sourceName.includes('SINERGIA 2')) return true;
+  if (
+    sourceName.includes('(S2)') ||
+    sourceName.includes('SINERGIA (S2)') ||
+    sourceName.includes('SINERGIA 2') ||
+    sourceName.includes('(S3)') ||
+    sourceName.includes('SINERGIA (S3)') ||
+    sourceName.includes('SINERGIA 3')
+  ) {
+    return true;
+  }
 
+  // 4. Verificar prefijos de clave S2- / S3-
   const key = String(p.clavePropiedad || p.public_id || p.id || '').trim().toUpperCase();
-  if (key.startsWith('S2-') || key.startsWith('S2_')) return true;
+  if (key.startsWith('S2-') || key.startsWith('S2_') || key.startsWith('S3-') || key.startsWith('S3_')) {
+    return true;
+  }
+
+  // 5. Si tiene un contacto externo o inmobiliaria externa asignada (no Match Home ni aliados S1 fijados),
+  // solo permitir si explícitamente está marcada como S1 o MH.
+  const comp = String(p.companiaCaptadora || p.idCompaniaCaptadora || '').trim().toUpperCase();
+  const isOwnOrPinnedS1 =
+    !cid ||
+    cid === 'pinned-mh' ||
+    cid === 'pinned-jgcapital' ||
+    cid === 'pinned-agh' ||
+    comp === '' ||
+    comp.includes('MATCH HOME') ||
+    comp.includes('MATCHHOME') ||
+    comp.includes('JGCAPITAL') ||
+    comp.includes('AGH');
+
+  if (!isOwnOrPinnedS1 && proc !== 'S1') {
+    return true;
+  }
 
   return false;
 }
+
+/**
+ * Consulta en Firestore todas las propiedades liberadas o enviadas para un contacto específico.
+ */
+export async function getAllowedPropertiesForContact(db, contactId, phone = null) {
+  const allowed = new Set();
+  if (!db) return allowed;
+
+  let contactDoc = null;
+  if (contactId && !contactId.includes(' ')) {
+    try {
+      const cSnap = await db.collection('contacts').doc(contactId).get();
+      if (cSnap.exists) contactDoc = cSnap;
+    } catch {
+      // Ignorar error de doc
+    }
+  }
+
+  if (!contactDoc && phone) {
+    try {
+      const cleanTel = String(phone).replace(/\D/g, '');
+      const q = await db.collection('contacts').where('telefono', '==', cleanTel).limit(1).get();
+      if (!q.empty) contactDoc = q.docs[0];
+    } catch {
+      // Ignorar error de teléfono
+    }
+  }
+
+  if (contactDoc) {
+    const cData = contactDoc.data();
+    // 1. Array sendedProperties
+    if (Array.isArray(cData.sendedProperties)) {
+      cData.sendedProperties.forEach((id) => {
+        if (id) allowed.add(String(id).trim().toUpperCase());
+      });
+    }
+    // 2. Propiedad de última propuesta vista
+    if (cData.lastProposalPropertyId) {
+      allowed.add(String(cData.lastProposalPropertyId).trim().toUpperCase());
+    }
+    // 3. Propiedad vinculada
+    if (cData.propCont) {
+      allowed.add(String(cData.propCont).trim().toUpperCase());
+    }
+    // 4. Bitácoras de envío
+    try {
+      const binnSnap = await db.collection('binnacles').where('to', '==', contactDoc.id).limit(50).get();
+      binnSnap.forEach((b) => {
+        const bd = b.data();
+        const action = String(bd.action || bd.tipo || '');
+        const comment = String(bd.comment || bd.propertyId || '').trim();
+        if (comment && (action.includes('Propiedad enviada') || action.includes('enviada') || action.includes('Propuesta'))) {
+          allowed.add(comment.toUpperCase());
+        }
+      });
+    } catch {
+      // Continuar si falla lectura de bitácoras
+    }
+  }
+
+  return allowed;
+}
+
+

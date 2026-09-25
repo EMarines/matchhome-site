@@ -1,13 +1,24 @@
 import { error } from '@sveltejs/kit';
 import { serializeFirestoreData } from '$lib/utils/serializeFirestore';
-import { isSinergia2 } from '$lib/utils/trimPropertyPayload';
+import { isSinergia2, getAllowedPropertiesForContact } from '$lib/utils/trimPropertyPayload';
 import inventoryData from '$lib/data/inventory.json';
 import { mockProperties } from '$lib/data/mockProperties';
 
-export async function load({ params, url, locals }) {
+export async function load({ params, url, locals, cookies }) {
   const { id } = params;
   const db = locals.db;
-  const contactId = url.searchParams.get('c');
+  const contactId = url.searchParams.get('c') || cookies.get('mh_contact_id');
+
+  if (url.searchParams.get('c')) {
+    try {
+      cookies.set('mh_contact_id', url.searchParams.get('c'), {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30,
+        httpOnly: false,
+        sameSite: 'lax'
+      });
+    } catch {}
+  }
   const paramNombre = url.searchParams.get('nombre') || url.searchParams.get('name') || url.searchParams.get('first_name') || url.searchParams.get('firstName') || '';
   const paramApellido = url.searchParams.get('apellido') || url.searchParams.get('lastname') || url.searchParams.get('lastName') || url.searchParams.get('last_name') || url.searchParams.get('apellidos') || '';
   const paramCliente = url.searchParams.get('cliente') || '';
@@ -190,10 +201,46 @@ export async function load({ params, url, locals }) {
   // ── Determinar si es contacto existente con preferencias propias ──────────────
   const isExistingContact = Boolean(contact && contact.id);
 
-  // ── REGLA CRÍTICA SINERGIA 2 (Red Externa / Alianza Privada) ─────────────────
-  // Las propiedades de Sinergia 2 SÍ pueden ser la casa principal (anchorProperty),
-  // pero NUNCA pueden mostrarse como propiedad secundaria/similar recomendada.
-  const eligibleSimilarPool = allPropertiesPool.filter((p) => !isSinergia2(p));
+  // ── Cargar mapa de sinergias y propiedades liberadas para este contacto ──────────────
+  const [contactsSnap, allowedPropsSet] = await Promise.all([
+    db ? db.collection('contacts').select('procedencia').get().catch(() => null) : null,
+    getAllowedPropertiesForContact(db, contactId, clientPhone)
+  ]);
+
+  const contactsSynergyMap = {};
+  if (contactsSnap && !contactsSnap.empty) {
+    contactsSnap.forEach((cDoc) => {
+      const cData = cDoc.data();
+      if (cData && cData.procedencia) {
+        contactsSynergyMap[cDoc.id] = cData.procedencia;
+      }
+    });
+  }
+
+  // ── Auto-Liberación de la Propiedad Principal en Firestore para este Contacto ──
+  const anchorKey = anchorProperty?.public_id || anchorProperty?.easybroker_id || anchorProperty?.clavePropiedad || anchorProperty?.id;
+  if (anchorKey) {
+    allowedPropsSet.add(String(anchorKey).trim().toUpperCase());
+    if (db && contact && contact.id) {
+      try {
+        const adminModule = await import('firebase-admin');
+        const FieldValue = adminModule.default?.firestore?.FieldValue || adminModule.firestore?.FieldValue;
+        if (FieldValue) {
+          await db.collection('contacts').doc(contact.id).update({
+            sendedProperties: FieldValue.arrayUnion(anchorKey),
+            lastProposalPropertyId: anchorKey,
+            lastProposalViewedAt: Date.now()
+          }).catch(() => null);
+        }
+      } catch (e) {
+        // non-blocking
+      }
+    }
+  }
+
+  // ── REGLA CRÍTICA SINERGIA 2 / 3 (Red Externa / Alianza Privada) ─────────────────
+  // Las propiedades de Sinergia 2/3 SÍ pueden mostrarse si fueron liberadas para este cliente.
+  const eligibleSimilarPool = allPropertiesPool.filter((p) => !isSinergia2(p, contactsSynergyMap, allowedPropsSet));
 
   let similars = [];
 
@@ -211,7 +258,7 @@ export async function load({ params, url, locals }) {
     similars = eligibleSimilarPool.filter((p) => {
       const pId = p.public_id || p.easybroker_id || p.id;
       if (pId === anchorId) return false;
-      if (isSinergia2(p)) return false;
+      if (isSinergia2(p, contactsSynergyMap)) return false;
 
       // Tipo de propiedad
       const pPropType = p.selecTP || p.tipoPropiedad || p.property_type || '';
@@ -265,7 +312,7 @@ export async function load({ params, url, locals }) {
     similars = eligibleSimilarPool.filter((p) => {
       const pId = p.public_id || p.easybroker_id || p.id;
       if (pId === anchorId) return false;
-      if (isSinergia2(p)) return false;
+      if (isSinergia2(p, contactsSynergyMap)) return false;
 
       const pOpType = p.selecTO || p.tipoOperacion || (p.operations?.[0]?.type) || '';
       const pPropType = p.selecTP || p.tipoPropiedad || p.property_type || '';

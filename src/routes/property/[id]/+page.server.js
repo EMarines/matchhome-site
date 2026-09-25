@@ -3,12 +3,23 @@ import { serializeFirestoreData } from '$lib/utils/serializeFirestore';
 import inventoryData from '$lib/data/inventory.json';
 import { mockProperties } from '$lib/data/mockProperties';
 
-export async function load({ params, url, locals }) {
+export async function load({ params, url, locals, cookies }) {
   const { id } = params;
   const db = locals.db;
 
-  // ── Extraer parámetros de contacto (directos o desde backUrl) ─────────────
-  let contactId = url.searchParams.get('c') || '';
+  // ── Extraer parámetros de contacto (directos o desde backUrl o cookies) ─────────────
+  let contactId = url.searchParams.get('c') || cookies.get('mh_contact_id') || '';
+
+  if (url.searchParams.get('c')) {
+    try {
+      cookies.set('mh_contact_id', url.searchParams.get('c'), {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30,
+        httpOnly: false,
+        sameSite: 'lax'
+      });
+    } catch {}
+  }
   let clientName =
     url.searchParams.get('cliente') ||
     url.searchParams.get('nombre') ||
